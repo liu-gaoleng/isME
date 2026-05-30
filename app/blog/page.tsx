@@ -38,56 +38,61 @@ export default function BlogPage() {
   }, [page]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen flex flex-col bg-black text-white">
       <Navbar />
-      
-      <main className="flex-grow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-8">博客文章</h1>
-          
+
+      <main className="flex-grow pt-32 pb-20">
+        <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-14">
+          <div className="text-xs tracking-[0.4em] uppercase text-white/50 mb-3">
+            Works
+          </div>
+          <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight mb-12">
+            作品
+          </h1>
+
           {loading ? (
-            <div className="text-center py-12">加载中...</div>
+            <div className="text-center py-12 text-white/60">加载中...</div>
           ) : error ? (
-            <div className="text-center py-12 text-red-600">{error}</div>
+            <div className="text-center py-12 text-red-400">{error}</div>
           ) : articles.length > 0 ? (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
                 {articles.map((article) => (
                   <ArticleCard key={article.id} article={article} />
                 ))}
               </div>
-              
+
               {/* Pagination */}
               {totalPages > 1 && (
-                <div className="flex justify-center gap-2">
+                <div className="flex justify-center items-center gap-4">
                   <button
                     onClick={() => setPage(p => Math.max(0, p - 1))}
                     disabled={page === 0}
-                    className="px-4 py-2 border rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
+                    className="px-6 py-2 border border-white/30 text-sm tracking-widest uppercase disabled:opacity-30 disabled:cursor-not-allowed hover:bg-white hover:text-black transition-all"
                   >
-                    上一页
+                    Prev
                   </button>
-                  <span className="px-4 py-2">
-                    第 {page + 1} / {totalPages} 页
+                  <span className="px-2 text-xs tracking-widest uppercase text-white/60">
+                    {page + 1} / {totalPages}
                   </span>
                   <button
                     onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
                     disabled={page >= totalPages - 1}
-                    className="px-4 py-2 border rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
+                    className="px-6 py-2 border border-white/30 text-sm tracking-widest uppercase disabled:opacity-30 disabled:cursor-not-allowed hover:bg-white hover:text-black transition-all"
                   >
-                    下一页
+                    Next
                   </button>
                 </div>
               )}
             </>
           ) : (
-            <div className="text-center py-12 text-gray-500">
-              暂无文章
+            <div className="text-center py-12 text-white/50">
+              暂无内容
             </div>
           )}
         </div>
       </main>
-      
+
       <Footer />
     </div>
   );

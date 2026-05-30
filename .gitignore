@@ -25,6 +25,6 @@ npm-debug.log*
 .DS_Store
 Thumbs.db
 
-# 原始素材（仅本地保留，正式资源已复制到 public/）
-material/
+# 原始素材（仅根目录的本地原图，不影响 public/material 下的网站资源）
+/material/
 
