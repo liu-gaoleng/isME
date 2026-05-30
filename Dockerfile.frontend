@@ -3,7 +3,8 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm ci --only=production
+# 构建阶段需要安装所有依赖（包括 devDependencies），否则 next 命令不可用
+RUN npm ci
 
 COPY . .
 RUN npm run build
