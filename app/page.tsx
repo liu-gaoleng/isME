@@ -43,14 +43,17 @@ export default function Home() {
           {/* 背景视频 */}
           <video
             className="absolute inset-0 w-full h-full object-cover"
-            src="/videos/hero-bg.mp4"
             autoPlay
             loop
             muted
             playsInline
             preload="auto"
+            poster="/videos/hero-poster.jpg"
             aria-hidden="true"
-          />
+          >
+            <source src="/videos/hero-bg.mp4" type="video/mp4" />
+            您的浏览器不支持 video 标签
+          </video>
 
           {/* 暗色蒙层，增强文字可读性 */}
           <div className="absolute inset-0 bg-black/40" />
