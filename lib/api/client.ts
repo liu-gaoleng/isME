@@ -97,4 +97,5 @@ export async function del<T>(url: string): Promise<T> {
   return handleResponse<T>(response);
 }
 
-export { ApiResponse, PageResponse, ApiError };
+export type { ApiResponse, PageResponse };
+export { ApiError };
