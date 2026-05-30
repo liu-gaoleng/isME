@@ -2,6 +2,9 @@ FROM maven:3.9.6-eclipse-temurin-17 AS builder
 
 WORKDIR /app
 
+# 配置阿里云 Maven 镜像源，加速国内服务器依赖下载
+COPY backend/maven-settings.xml /root/.m2/settings.xml
+
 # 注意：构建上下文是项目根目录（见 docker-compose.yml 中 context: .），
 # 因此这里需要带上 backend/ 前缀才能定位到正确的源码路径
 COPY backend/pom.xml .
