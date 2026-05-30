@@ -2,8 +2,16 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+# 接收构建参数（NEXT_PUBLIC_* 必须在 build 阶段就被注入，否则会被打成 undefined）
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+
+# 配置淘宝 npm 镜像源，加速国内服务器构建
+RUN npm config set registry https://registry.npmmirror.com
+
 COPY package*.json ./
-RUN npm ci --only=production
+# 构建阶段需要安装所有依赖（包括 devDependencies），否则 next 命令不可用
+RUN npm ci
 
 COPY . .
 RUN npm run build

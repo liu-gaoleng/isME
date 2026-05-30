@@ -42,6 +42,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.frontend
+      args:
+        # NEXT_PUBLIC_* 变量必须在构建阶段注入，next build 时会写死到产物中
+        NEXT_PUBLIC_API_URL: ${API_URL:-http://localhost:8080}
     container_name: personal-site-frontend
     ports:
       - "3000:3000"
