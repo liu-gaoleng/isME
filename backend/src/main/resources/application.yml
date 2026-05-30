@@ -6,9 +6,9 @@ spring:
     name: personal-site-backend
     
   datasource:
-    url: jdbc:mysql://localhost:3306/personal_site?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false
+    url: jdbc:mysql://localhost:3306/personal_site?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
     username: root
-    password: 123456
+    password: your_password
     driver-class-name: com.mysql.cj.jdbc.Driver
     
   jpa:

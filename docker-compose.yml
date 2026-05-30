@@ -47,6 +47,7 @@ services:
       - "3000:3000"
     environment:
       NEXT_PUBLIC_API_URL: ${API_URL:-http://localhost:8080}
+      # NEXT_PUBLIC_API_URL: https://api.yourdomain.com # 如果你有真实域名，上线时请替换为你的真实API域名
     depends_on:
       - backend
     restart: always
