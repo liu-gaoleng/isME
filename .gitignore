@@ -1,4 +1,4 @@
-﻿# 环境变量
+# 环境变量
 .env
 .env.local
 .env.*.local
@@ -24,3 +24,7 @@ npm-debug.log*
 # 系统文件
 .DS_Store
 Thumbs.db
+
+# 原始素材（仅本地保留，正式资源已复制到 public/）
+material/
+

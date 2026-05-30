@@ -20,7 +20,7 @@ export default function Home() {
           fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/articles/featured`).then(r => r.json()),
           fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/articles/popular?limit=5`).then(r => r.json()),
         ]);
-        
+
         setFeaturedArticles(featured.data || []);
         setPopularArticles(popular.data || []);
       } catch (err) {
@@ -35,36 +35,80 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      <Navbar />
-      
+      <Navbar transparent />
+
       <main className="flex-grow">
-        {/* Hero Section */}
-        <section className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">
-              欢迎来到我的个人网站
+        {/* Hero Section - 全屏视频背景 */}
+        <section className="relative w-full h-screen overflow-hidden">
+          {/* 背景视频 */}
+          <video
+            className="absolute inset-0 w-full h-full object-cover"
+            src="/videos/hero-bg.mp4"
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload="auto"
+            aria-hidden="true"
+          />
+
+          {/* 暗色蒙层，增强文字可读性 */}
+          <div className="absolute inset-0 bg-black/40" />
+
+          {/* 中心内容 */}
+          <div className="relative z-10 h-full flex flex-col items-center justify-center px-4 text-center text-white">
+            <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-6 drop-shadow-lg">
+              你好，我是 Liu
             </h1>
-            <p className="text-xl mb-8 text-blue-100">
-              分享技术，记录生活
+            <p className="max-w-2xl text-base md:text-xl text-white/85 leading-relaxed mb-10 drop-shadow">
+              一名热爱技术与创造的开发者，
+              <br className="hidden md:block" />
+              在这里记录我的思考、分享我的项目，
+              <br className="hidden md:block" />
+              希望与同样热爱探索的你相遇。
             </p>
-            <Link
-              href="/blog"
-              className="inline-block bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-colors"
+
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Link
+                href="/blog"
+                className="inline-block px-8 py-3 rounded-full bg-white/10 backdrop-blur border border-white/40 text-white font-medium hover:bg-white/20 transition-all"
+              >
+                浏览文章
+              </Link>
+              <Link
+                href="/about"
+                className="inline-block px-8 py-3 rounded-full bg-white text-gray-900 font-medium hover:bg-white/90 transition-all"
+              >
+                了解更多
+              </Link>
+            </div>
+          </div>
+
+          {/* 底部滚动提示 */}
+          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 text-white/70 text-sm flex flex-col items-center gap-2 animate-bounce">
+            <span>向下滚动</span>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="w-5 h-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
             >
-              浏览文章
-            </Link>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
           </div>
         </section>
 
         {/* Featured Articles */}
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="flex justify-between items-center mb-8">
             <h2 className="text-3xl font-bold text-gray-900">精选文章</h2>
             <Link href="/blog" className="text-blue-600 hover:text-blue-800">
               查看更多 →
             </Link>
           </div>
-          
+
           {loading ? (
             <div className="text-center py-12">加载中...</div>
           ) : error ? (
@@ -83,10 +127,10 @@ export default function Home() {
         </section>
 
         {/* Popular Articles */}
-        <section className="bg-white py-12">
+        <section className="bg-white py-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <h2 className="text-3xl font-bold text-gray-900 mb-8">热门文章</h2>
-            
+
             {loading ? (
               <div className="text-center py-12">加载中...</div>
             ) : popularArticles.length > 0 ? (
@@ -121,7 +165,7 @@ export default function Home() {
           </div>
         </section>
       </main>
-      
+
       <Footer />
     </div>
   );
