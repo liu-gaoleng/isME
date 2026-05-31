@@ -20,9 +20,14 @@ export default function Navbar({ transparent = false }: NavbarProps) {
       if (transparent) setScrolled(y > 80);
 
       // 接近页面底部时隐藏顶栏（距底部 < 120px）
-      const distanceFromBottom =
-        document.documentElement.scrollHeight - (y + window.innerHeight);
-      setHidden(distanceFromBottom < 120);
+      // 仅当页面足够长（可滚动距离 > 一屏高度的一半）且用户确实滚动过时才允许触发，
+      // 避免短页面（如作品/博客空列表）一进入就被误判为"接近底部"。
+      const docHeight = document.documentElement.scrollHeight;
+      const viewportHeight = window.innerHeight;
+      const scrollable = docHeight - viewportHeight;
+      const distanceFromBottom = scrollable - y;
+      const longEnough = scrollable > viewportHeight * 0.5;
+      setHidden(longEnough && y > 0 && distanceFromBottom < 120);
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -38,10 +43,10 @@ export default function Navbar({ transparent = false }: NavbarProps) {
   const isTransparent = transparent && !scrolled;
 
   const navLinks = [
-    { href: '/blog', label: '作品' },
-    { href: '/#hobbies', label: '爱好' },
+    { href: '/blog', label: '产品' },
+    { href: '/notes', label: '笔记' },
+    { href: '/hobbies', label: '爱好' },
     { href: '/about', label: '经历' },
-    { href: '/admin', label: '管理' },
   ];
 
   return (

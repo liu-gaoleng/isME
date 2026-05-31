@@ -43,11 +43,8 @@ export default function BlogPage() {
 
       <main className="flex-grow pt-32 pb-20">
         <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-14">
-          <div className="text-xs tracking-[0.4em] uppercase text-white/50 mb-3">
-            Works
-          </div>
           <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight mb-12">
-            作品
+            产品
           </h1>
 
           {loading ? (

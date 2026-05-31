@@ -1,0 +1,185 @@
+export type NoteType = 'musing' | 'essay';
+
+export interface EssaySection {
+  /** 章节标题 */
+  heading: string;
+  /** 章节正文（多段） */
+  paragraphs: string[];
+}
+
+export interface Note {
+  id: string;
+  type: NoteType;
+  /** 显示用日期，如 '2026.05.30' */
+  date: string;
+  /** 标签：思考 / 技术 / 生活 / 读书 / 大数据 ... */
+  category: string;
+  /** 可选标题（碎碎念可不写；知识必写） */
+  title?: string;
+  /** 多段正文：musing 是完整正文；essay 是摘要 / 引言 */
+  body: string[];
+  /** essay 专属：完整章节，会渲染在详情页 */
+  sections?: EssaySection[];
+  /** essay 专属：阅读时长，如 '12 min' */
+  readingTime?: string;
+}
+
+/**
+ * 笔记数据：按时间倒序排列（最新的在最前）。
+ * - type: 'musing' 短想法 / 心情碎片
+ * - type: 'essay'  结构完整的知识性长文（详情页 /notes/[id]）
+ */
+export const notes: Note[] = [
+  // ============ 碎碎念 ============
+  {
+    id: '2026-05-30-hello',
+    type: 'musing',
+    date: '2026.05.30',
+    category: '生活',
+    title: '从今天起，写点什么',
+    body: [
+      '突然觉得，应该有一个地方——不必长、不必正式、不必每次都有结论——只是单纯地记录当下的某种心情或想法。',
+      '于是有了这个「笔记」。它不是博客，也不是日记。它更像贴在墙上的便签：路过时一眼扫过，但每一张都曾真实地存在过。',
+    ],
+  },
+  {
+    id: '2026-05-28-mappa',
+    type: 'musing',
+    date: '2026.05.28',
+    category: '设计',
+    title: '从 MAPPA 学到的「克制」',
+    body: [
+      '反复看 MAPPA 的官网，忽然明白他们最厉害的不是动效——而是「敢留白」。一整屏只放一句话、一段视频、一个按钮。',
+      '克制需要自信。多数时候我们往页面塞东西，是因为我们害怕沉默。',
+    ],
+  },
+  {
+    id: '2026-05-25-debugging',
+    type: 'musing',
+    date: '2026.05.25',
+    category: '技术',
+    body: [
+      '调了一整天的 BUG，最后发现是一个拼错的字段名。这种时候特别想感谢那些在我之前为同一段代码留下注释的人——尽管那个人就是几个月前的我自己。',
+    ],
+  },
+  {
+    id: '2026-05-15-walk',
+    type: 'musing',
+    date: '2026.05.15',
+    category: '生活',
+    body: [
+      '晚饭后走了很久。北方的春天来得犹豫，风里还有冬天的尾巴。',
+      '走路的时候不戴耳机——这样思绪才能慢下来，跟脚步对齐。',
+    ],
+  },
+
+  // ============ 知识 ============
+  {
+    id: '2026-05-22-flink-cdc',
+    type: 'essay',
+    date: '2026.05.22',
+    category: '大数据',
+    title: 'Flink CDC 实战：从 MySQL Binlog 到实时数仓',
+    readingTime: '14 min',
+    body: [
+      '这是一篇把"听过 CDC"和"用过 CDC"两者拉开距离的文章——讲清楚 Flink CDC 在生产环境里到底在做什么，以及它会在哪些地方反咬你一口。',
+      '从 Binlog 协议、Debezium 反序列化，到 Flink Source 的 incremental snapshot 算法，最后给出一份我自己上线时反复打勾的 Checklist。',
+    ],
+    sections: [
+      {
+        heading: 'CDC 的本质：把数据库当流来读',
+        paragraphs: [
+          'CDC（Change Data Capture）的核心思想其实很朴素：让你以"流"的方式订阅一张表，而不是反复地去 SELECT 它。',
+          '在 MySQL 里，这件事通过 Binlog 来实现——每一次 INSERT / UPDATE / DELETE，MySQL 都会按顺序写入二进制日志。CDC 就是把这条日志"接出来"，转换成结构化事件，再喂给下游。',
+          '理解这一点之后，CDC 就不再是某个"新框架"，而是数据库的一种自然延伸。',
+        ],
+      },
+      {
+        heading: 'MySQL Binlog 的三种 row 模式与坑',
+        paragraphs: [
+          'STATEMENT、ROW、MIXED——三种 Binlog 格式，CDC 场景必须用 ROW，否则一些非确定性 SQL（NOW()、UUID()、触发器）下游会重放出错。',
+          '另外注意 binlog_row_image 字段：默认 FULL 会把整行 before/after 都打入；MINIMAL 只打主键和被改字段，会让下游重建逻辑变复杂。',
+          '生产建议：ROW + FULL + 适当的 binlog 保留时长（>=7 天，留足排障窗口）。',
+        ],
+      },
+      {
+        heading: 'Flink CDC Source 的 Snapshot + Streaming 切换',
+        paragraphs: [
+          'Flink CDC 2.x 引入了 incremental snapshot：把全量阶段拆成多个 chunk，并发拉取，期间已经在记录新增 Binlog；全量结束后无缝切到流式增量。',
+          '这套机制解决了 1.x 时代的两大痛点：全量阶段必须独占连接 + 全量期间无法消费增量。',
+          '关键参数：scan.incremental.snapshot.chunk.size、server-id 区间（每个 subtask 一个独立 id）、chunk.key-column（默认主键，无主键表必须显式指定）。',
+        ],
+      },
+      {
+        heading: 'Schema 演进与 Exactly-Once 保证',
+        paragraphs: [
+          'Schema 演进是 CDC 真正难的一块——上游加字段、改类型、删表，下游消费方该怎么办？',
+          'Flink CDC 默认会把 schema change 作为 DDL 事件发出，但默认不自动同步到下游 sink。建议把 schema 注册到 Confluent Schema Registry / Hudi / Paimon 这类支持版本演进的存储。',
+          'Exactly-Once：依赖 Flink checkpoint + 下游 sink 的事务能力。Kafka 用事务、Doris/Paimon 用两阶段提交，否则只能做到 At-Least-Once + 下游幂等。',
+        ],
+      },
+      {
+        heading: '上线前的 Checklist 与生产经验',
+        paragraphs: [
+          '1. binlog_format=ROW、binlog_row_image=FULL、保留 ≥7 天；',
+          '2. 给 CDC 单独开 MySQL 用户，授 REPLICATION SLAVE / CLIENT；',
+          '3. server-id 用区间，避免与现有 replica 冲突；',
+          '4. 监控 Binlog 滞后（seconds_behind_master + sink lag）；',
+          '5. 容量规划：全量阶段网络 / 内存峰值，预留 2x；',
+          '6. 灰度：先单表、再单库、再多库——一次切换永远是最贵的事故来源。',
+        ],
+      },
+    ],
+  },
+  {
+    id: '2026-05-20-book',
+    type: 'essay',
+    date: '2026.05.20',
+    category: '读书',
+    title: '《人月神话》重读：在 AI 时代再看 Brooks',
+    readingTime: '8 min',
+    body: [
+      '"没有银弹"——这句话被引用太多次以至于失去了重量。但 Brooks 真正想说的不是"软件没救了"，而是"承认复杂，然后耐心地与它相处"。',
+      '在 LLM 把生产力推到一个新台阶的今天，重读这本书，反而更能看清楚什么是真的护城河、什么只是新一轮幻觉。',
+    ],
+    sections: [
+      {
+        heading: '"没有银弹"为什么仍然成立',
+        paragraphs: [
+          'Brooks 在 1986 年提出："十年之内不会出现单一的技术或管理上的进展，能够使生产率、可靠性、简洁性获得一个数量级的提升。"',
+          '过去四十年里，被宣传为"银弹"的东西非常多：面向对象、4GL、CASE 工具、敏捷、低代码——它们都让某些方面好了一点，但没有任何一个让软件本身的复杂度数量级下降。',
+          '原因在于：软件的复杂度并不主要来自"实现"，而来自"问题本身"。',
+        ],
+      },
+      {
+        heading: '本质复杂 vs 偶然复杂',
+        paragraphs: [
+          'Brooks 把复杂度分成两种：偶然复杂（accidental complexity，由工具、语言、环境带来）和本质复杂（essential complexity，问题域本身的复杂）。',
+          '历史上的进步主要削减了偶然复杂——更好的语言、更好的工具、更好的部署。但本质复杂（业务规则、状态空间、并发交互）几乎从未真正缩小。',
+          '所以一个工程师水平的核心，不在于多熟一个新框架，而在于多深地理解他要解决的那个问题。',
+        ],
+      },
+      {
+        heading: 'AI 工具是新银弹吗？',
+        paragraphs: [
+          'LLM 让"写代码"的成本数量级下降——这无可否认。但它解决的，依然是偶然复杂中的一部分（敲键盘、查 API、写样板）。',
+          '真正的本质复杂——业务建模、约束发现、tradeoff 决策——仍然需要人来做。',
+          '甚至可以说，AI 让本质复杂变得更显眼了：当你不再被"怎么写"卡住，你就必须直面"到底要写什么"。',
+        ],
+      },
+      {
+        heading: '对个人的启示：与复杂相处',
+        paragraphs: [
+          '读这本书最深的一次震动，来自这句话："优秀的软件设计师必须培养出对优雅的真正热爱。"',
+          '优雅不是少写代码，而是看清复杂之后的选择——选择保留什么、丢掉什么。',
+          '我把它理解为一种长期主义：承认问题本身的难，承认进度只能慢慢来，承认有些坑你必须亲自踩过才会真正学会。',
+        ],
+      },
+    ],
+  },
+];
+
+/** 把字符串 id 转为 URL-safe 的 slug（这里我们直接用 id 即可，已经是 dash 风格） */
+export function getNoteById(id: string): Note | undefined {
+  return notes.find((n) => n.id === id);
+}

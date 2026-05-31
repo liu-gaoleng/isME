@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Liu — Personal Site",
-  description: "Liu 的个人网站：作品、爱好与经历。",
+  description: "Liu 的个人网站：产品、爱好与经历。",
 };
 
 export default function RootLayout({

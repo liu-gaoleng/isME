@@ -8,9 +8,95 @@ import ArticleCard from '@/components/ArticleCard';
 import { Article } from '@/lib/api';
 import { useScrollReveal } from '@/lib/useScrollReveal';
 
+/* ============================================================
+ * Weekly Pick · 每周精选数据
+ * ----------------------------------------------------------------
+ * 每周日花 30 分钟更新一次：
+ *   1. 改 weekLabel 为新一周编号（YYYY.WW），例如 '2026.W22'
+ *   2. 替换 items 数组里的 4-6 条新内容
+ * 字段说明：
+ *   - type: 'article' | 'video' | 'tweet' | 'paper'  内容形态
+ *   - topic: 自由标签 e.g. 'AI', 'Markets', 'Tech', 'Finance'
+ *   - title: 内容主标题
+ *   - source: 来源（媒体名 / 频道 / 作者）
+ *   - url: 原文外链（点击在新标签页打开）
+ *   - note: 你的一句点评（可选，但强烈建议保留——这是你站点的灵魂）
+ * ========================================================== */
+
+type PickType = 'article' | 'video' | 'tweet' | 'paper';
+
+interface WeeklyPickItem {
+  type: PickType;
+  topic: string;
+  title: string;
+  source: string;
+  url: string;
+  note?: string;
+}
+
+const PICK_META: Record<PickType, { label: string; dot: string }> = {
+  article: { label: 'Article', dot: 'bg-white/70' },
+  video:   { label: 'Video',   dot: 'bg-red-400/80' },
+  tweet:   { label: 'Tweet',   dot: 'bg-sky-400/80' },
+  paper:   { label: 'Paper',   dot: 'bg-emerald-400/80' },
+};
+
+const weeklyPicks: { weekLabel: string; items: WeeklyPickItem[] } = {
+  weekLabel: '2026.W22',
+  items: [
+    {
+      type: 'article',
+      topic: 'AI',
+      title: 'The Bitter Lesson, Revisited',
+      source: 'Rich Sutton · incompleteideas.net',
+      url: 'http://www.incompleteideas.net/IncIdeas/BitterLesson.html',
+      note: '十年后再读，依然刺痛——通用方法 + 算力终将胜过精巧人工设计。',
+    },
+    {
+      type: 'video',
+      topic: 'Tech',
+      title: 'A Conversation with Jensen Huang',
+      source: 'Acquired Podcast · YouTube',
+      url: 'https://www.youtube.com/results?search_query=jensen+huang+acquired+podcast',
+      note: '黄仁勋讲述他二十年前选择押注加速计算时的孤独——伟大的判断常诞生在共识之外。',
+    },
+    {
+      type: 'tweet',
+      topic: 'Markets',
+      title: '"市场不会奖励正确，市场只奖励先于共识的正确。"',
+      source: '@morganhousel',
+      url: 'https://twitter.com/morganhousel',
+      note: '一句话击穿了"我看对了为什么没赚到钱"这件事的本质。',
+    },
+    {
+      type: 'paper',
+      topic: 'AI',
+      title: 'Scaling Laws for Neural Language Models',
+      source: 'Kaplan et al., 2020 · arXiv:2001.08361',
+      url: 'https://arxiv.org/abs/2001.08361',
+      note: '当下 AI 工业化的"地基论文"，理解为什么"更大就是更好"在过去五年成为信仰。',
+    },
+    {
+      type: 'article',
+      topic: 'Finance',
+      title: 'Why Compounding Is Magic',
+      source: 'Morgan Housel · Collaborative Fund',
+      url: 'https://collabfund.com/blog/',
+      note: '不是高收益，而是时间——这是金融里最被低估也最被知道的真相。',
+    },
+    {
+      type: 'video',
+      topic: 'AI',
+      title: '"Software is eating the world. AI is eating software."',
+      source: 'Andrej Karpathy · YouTube Talks',
+      url: 'https://www.youtube.com/@AndrejKarpathy',
+      note: 'Karpathy 总能用最朴素的语言讲清楚最深的事——这是最好的工程师品质。',
+    },
+  ],
+};
+
 export default function Home() {
   const [featuredArticles, setFeaturedArticles] = useState<Article[]>([]);
-  const [popularArticles, setPopularArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
@@ -33,13 +119,11 @@ export default function Home() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [featured, popular] = await Promise.all([
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/articles/featured`).then(r => r.json()),
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/articles/popular?limit=5`).then(r => r.json()),
-        ]);
+        const featured = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/articles/featured`
+        ).then((r) => r.json());
 
         setFeaturedArticles(featured.data || []);
-        setPopularArticles(popular.data || []);
       } catch (err) {
         setError(err instanceof Error ? err.message : '加载失败');
       } finally {
@@ -84,39 +168,45 @@ export default function Home() {
           <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black" />
 
           <div className="relative z-10 h-full flex flex-col items-start justify-center px-6 sm:px-10 lg:px-14 max-w-7xl mx-auto w-full text-white">
-            <div className="text-xs md:text-sm tracking-[0.4em] uppercase text-white/60 mb-6 reveal">
-              Personal Site
-            </div>
-            <h1 className="text-5xl md:text-7xl lg:text-8xl font-extrabold tracking-tight leading-[1.05] mb-8 reveal reveal-delay-1">
+            <h1 className="text-5xl md:text-7xl lg:text-8xl font-extrabold tracking-tight leading-[1.05] mb-8 reveal">
               Hello,
               <br />
-              I&apos;m <span className="italic font-light">Liu</span>.
+              I&apos;m <span className="italic font-light">LiuWenhao</span>.
             </h1>
-            <p className="max-w-xl text-base md:text-lg text-white/70 leading-relaxed mb-10 reveal reveal-delay-2">
-              一名热爱技术与创造的开发者，在这里记录我的过去、现在与未来。
+            <p className="max-w-xl text-base md:text-lg text-white/70 leading-relaxed mb-6 reveal reveal-delay-1">
+              灵感本易逝，行动应当是。
             </p>
-
-            <div className="flex flex-col sm:flex-row gap-4 reveal reveal-delay-3">
-              <Link
-                href="#manifesto"
-                className="inline-flex items-center justify-center px-8 py-3 border border-white/40 text-white text-sm tracking-widest uppercase hover:bg-white hover:text-black transition-all"
-              >
-                进入故事
-              </Link>
-              <Link
-                href="/about"
-                className="inline-flex items-center justify-center px-8 py-3 border border-transparent bg-white text-black text-sm tracking-widest uppercase hover:bg-white/85 transition-all"
-              >
-                了解经历
-              </Link>
-            </div>
+            <p className="max-w-2xl text-sm md:text-base text-white/55 leading-[1.9] reveal reveal-delay-2">
+              一个疯子，<span className="text-white/80">写代码，也写文字</span>，
+              梦想是当 <span className="text-white/80">21 世纪的 Elon Musk 或 Jensen Huang</span>。
+              <br className="hidden md:block" />
+              这里收藏了我的<span className="text-white/80">产品、笔记、爱好与经历</span>，
+              欢迎随意走走。
+            </p>
           </div>
 
           {/* 底部滚动提示 */}
-          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-10 text-white/60 text-xs tracking-[0.3em] uppercase flex flex-col items-center gap-3">
-            <span>Scroll</span>
+          <a
+            href="#manifesto"
+            aria-label="向下滚动"
+            className="group absolute bottom-10 left-1/2 -translate-x-1/2 z-10 text-white/60 hover:text-white flex flex-col items-center gap-3 transition-colors"
+          >
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="animate-bounce"
+            >
+              <path d="M12 5v14" />
+              <path d="M6 13l6 6 6-6" />
+            </svg>
             <span className="block w-px h-10 bg-white/40 animate-pulse" />
-          </div>
+          </a>
         </section>
 
         {/* Manifesto / 引言 */}
@@ -125,18 +215,15 @@ export default function Home() {
             MANIFESTO
           </span>
           <div className="relative max-w-5xl mx-auto px-6 sm:px-10 lg:px-14">
-            <div className="text-xs tracking-[0.4em] uppercase text-white/50 mb-6 reveal">
-              — 序章 / Manifesto
-            </div>
-            <p className="text-3xl md:text-5xl lg:text-6xl font-extrabold leading-[1.15] tracking-tight reveal reveal-delay-1">
+            <p className="text-3xl md:text-5xl lg:text-6xl font-extrabold leading-[1.15] tracking-tight reveal">
               我相信代码与文字
               <br />
               都能成为
               <span className="italic font-light text-white/80"> 改变世界 </span>
               的杠杆。
             </p>
-            <p className="mt-8 max-w-2xl text-base md:text-lg text-white/60 leading-relaxed reveal reveal-delay-2">
-              在每一次回望、每一次冲撞与每一次构想之中，我把自己交给时间——以坦诚的笔触，记下走过的路、正在做的事，和那些尚未抵达的远方。
+            <p className="mt-8 max-w-2xl text-base md:text-lg text-white/60 leading-relaxed reveal reveal-delay-1">
+              当然，21 岁时最大的杠杆一定是投资自己——重点在提升自己的技术能力、创造能力、商业能力、产品能力、网络与信誉。
             </p>
           </div>
         </section>
@@ -150,15 +237,25 @@ export default function Home() {
           <div className="relative max-w-7xl mx-auto px-6 sm:px-10 lg:px-14">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
               <div className="lg:col-span-4 reveal">
-                <div className="text-xs tracking-[0.4em] uppercase text-white/50 mb-4">
-                  Chapter 01
-                </div>
                 <h2 className="text-5xl md:text-6xl font-extrabold tracking-tight">
                   过去
                 </h2>
-                <div className="mt-4 text-sm tracking-widest uppercase text-white/40">
-                  Past — Where I came from
-                </div>
+
+                {/* 过去的剪影 · 深夜里的代码 */}
+                <figure className="mt-8 md:mt-10">
+                  <div className="relative overflow-hidden border border-white/10 bg-white/[0.02]">
+                    <img
+                      src="/material/past/69f0ddaa23dfdf101591a7eef9da41a8.jpg"
+                      alt="深夜里的代码"
+                      className="w-full h-auto object-cover opacity-90 hover:opacity-100 transition-opacity duration-700"
+                      loading="lazy"
+                    />
+                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                  </div>
+                  <figcaption className="mt-3 text-[11px] tracking-[0.35em] uppercase text-white/40">
+                    深夜里的代码
+                  </figcaption>
+                </figure>
               </div>
               <div className="lg:col-span-8">
                 <ul className="relative border-l border-white/15 pl-8 md:pl-12 space-y-12">
@@ -166,17 +263,17 @@ export default function Home() {
                     {
                       year: '童年',
                       title: '与好奇心相遇',
-                      desc: '在一台旧电脑前敲下第一行代码，从此被「让机器听懂自己」这件事彻底吸引。',
+                      desc: '小时候和二哥用大头电脑打 LOL，到大学计算机课输出第一行「Hello World！」。',
                     },
                     {
                       year: '学生时代',
                       title: '从兴趣到方法',
-                      desc: '在算法、操作系统、网络协议之间反复跌倒又爬起，理解到优雅来自约束、清晰源于训练。',
+                      desc: '没有兴趣，只有高考时选了对应专业后的妥协；当拼命一年来到大数据领域最顶尖的公司之一工作时，才发现，兴趣是多么重要。',
                     },
                     {
                       year: '初入职场',
                       title: '面对真实的世界',
-                      desc: '第一次看见自己写下的代码被成千上万的人使用，那种敬畏感至今犹在。',
+                      desc: '第一次看见自己写下的代码被 DS 使用 从而影响商业化整体的决策时，那种敬畏感至今犹在；但我绝不会满足于此，更不会一辈子锁死在小小的工位上。',
                     },
                   ].map((item, idx) => (
                     <li
@@ -208,41 +305,29 @@ export default function Home() {
         >
           <span className="chapter-bg top-8 right-0 select-none">NOW</span>
           <div className="relative max-w-7xl mx-auto px-6 sm:px-10 lg:px-14">
-            <div className="text-xs tracking-[0.4em] uppercase text-white/50 mb-4 reveal">
-              Chapter 02
-            </div>
-            <h2 className="text-5xl md:text-6xl font-extrabold tracking-tight mb-4 reveal reveal-delay-1">
+            <h2 className="text-5xl md:text-6xl font-extrabold tracking-tight mb-12 reveal">
               现在
             </h2>
-            <div className="text-sm tracking-widest uppercase text-white/40 mb-12 reveal reveal-delay-1">
-              Present — What I am building
-            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[
                 {
                   title: '工程实践',
-                  en: 'Engineering',
-                  desc: '在前后端、基础设施与体验之间寻找平衡，把复杂留给自己，把简洁交给用户。',
+                  desc: '在 Web 开发、大数据开发、小游戏开发等领域都有涉及，当然最熟练的一定是 vibe coding。',
                 },
                 {
                   title: '持续学习',
-                  en: 'Learning',
-                  desc: '每天读、每天写、每天调试。技术变化是常态，我把保持好奇当成生活方式。',
+                  desc: '每天读、每天写、每天想我到底要做什么。尽量让自己身处于行业的最前沿，学习 AI，找到兴趣、大量阅读、保持健康、坚持输出、稳定复利。',
                 },
                 {
                   title: '记录与分享',
-                  en: 'Sharing',
-                  desc: '在这个网站记下作品与思考，希望能成为同行路上的一束微光。',
+                  desc: '在这个网站记下产品与思考，掌握知识的最好体现就是可以很好地教给他人。',
                 },
               ].map((item, idx) => (
                 <div
                   key={item.title}
                   className={`group relative border border-white/10 p-8 md:p-10 hover:border-white/40 hover:bg-white/[0.04] transition-all duration-500 reveal reveal-delay-${Math.min(idx + 1, 3)}`}
                 >
-                  <div className="text-[11px] tracking-[0.35em] uppercase text-white/40 mb-4">
-                    {item.en}
-                  </div>
                   <h3 className="text-2xl font-bold text-white mb-4">{item.title}</h3>
                   <p className="text-white/60 leading-relaxed">{item.desc}</p>
                   <div className="mt-8 h-px w-12 bg-white/30 group-hover:w-24 transition-all duration-500" />
@@ -258,49 +343,83 @@ export default function Home() {
           className="relative bg-black py-28 md:py-36 border-t border-white/10 overflow-hidden"
         >
           <span className="chapter-bg top-12 left-1/4 select-none">FUTURE</span>
-          <div className="relative max-w-5xl mx-auto px-6 sm:px-10 lg:px-14">
-            <div className="text-xs tracking-[0.4em] uppercase text-white/50 mb-4 reveal">
-              Chapter 03
-            </div>
-            <h2 className="text-5xl md:text-6xl font-extrabold tracking-tight mb-4 reveal reveal-delay-1">
+          <div className="relative max-w-7xl mx-auto px-6 sm:px-10 lg:px-14">
+            <h2 className="text-5xl md:text-6xl font-extrabold tracking-tight mb-14 reveal">
               将来
             </h2>
-            <div className="text-sm tracking-widest uppercase text-white/40 mb-14 reveal reveal-delay-1">
-              Future — Where I&apos;m heading
-            </div>
 
-            <blockquote className="reveal reveal-delay-2">
+            <blockquote className="reveal reveal-delay-1">
               <p className="text-3xl md:text-5xl font-extrabold leading-[1.2] tracking-tight">
                 <span className="text-white/40">「</span>
-                把工具做得更轻，把人与世界的距离拉得更近——
-                这是我希望用余下的所有时间去做的事。
+                我不甘愿做大厂里的一颗螺丝钉——
+                我想打造一款属于自己的产品。
                 <span className="text-white/40">」</span>
               </p>
               <footer className="mt-6 text-xs tracking-[0.4em] uppercase text-white/50">
-                — Liu, On A Late Night
+                —— 写给未来的自己
               </footer>
             </blockquote>
 
             <div className="mt-16 grid grid-cols-1 md:grid-cols-2 gap-6">
               {[
                 {
-                  title: '更好的产品',
-                  desc: '相信「细节决定灵魂」，希望我做的每一个产品都对得起使用它的人。',
+                  title: '不做螺丝钉',
+                  desc: '工位上的稳定与体面，是这个时代最隐蔽的陷阱。我尊重每一份工作，但我拒绝把一辈子折叠进一个 Title。',
                 },
                 {
-                  title: '更广的影响',
-                  desc: '走到更远的地方、与更多领域的人合作，让技术成为真实变化的载体。',
+                  title: '造自己的东西',
+                  desc: '从一行代码、一个产品，到一家公司——像 Elon、像 Jensen 那样，把疯狂的想法一步步变成现实。',
+                },
+                {
+                  title: '改变行业的规则',
+                  desc: '真正值得做的事，是别人没做过、或者不敢做的事。技术、AI、能源、商业——总有一条路属于这一代人。',
+                },
+                {
+                  title: '走到世界中央',
+                  desc: '把眼界从工位扩展到全球，与最聪明、最敢想的人同行；让我做出来的东西，能被这个世界听见、用上、记住。',
                 },
               ].map((item, idx) => (
                 <div
                   key={item.title}
-                  className={`border-l-2 border-white/30 pl-6 md:pl-8 py-2 reveal reveal-delay-${idx + 2}`}
+                  className={`border-l-2 border-white/30 pl-6 md:pl-8 py-2 reveal reveal-delay-${Math.min(idx + 1, 3)}`}
                 >
                   <h3 className="text-xl md:text-2xl font-bold text-white mb-2">
                     {item.title}
                   </h3>
                   <p className="text-white/60 leading-relaxed">{item.desc}</p>
                 </div>
+              ))}
+            </div>
+
+            {/* 将来的两幅画 */}
+            <div className="mt-20 md:mt-24 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+              {[
+                {
+                  src: '/material/future/bc7bcc999d5e41b6a36e2c6ca195f84f.jpg',
+                  caption: '梦想 · 朝着远方走',
+                },
+                {
+                  src: '/material/future/0a0af4264bb7caa88d4673fbc7f2b759.jpg',
+                  caption: '行动 · 不肯停下的人',
+                },
+              ].map((img, idx) => (
+                <figure
+                  key={img.src}
+                  className={`reveal reveal-delay-${Math.min(idx + 1, 3)}`}
+                >
+                  <div className="relative overflow-hidden border border-white/10 bg-white/[0.02] aspect-[4/3]">
+                    <img
+                      src={img.src}
+                      alt={img.caption}
+                      className="w-full h-full object-cover opacity-90 hover:opacity-100 hover:scale-[1.02] transition-all duration-700"
+                      loading="lazy"
+                    />
+                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                  </div>
+                  <figcaption className="mt-3 text-[11px] tracking-[0.35em] uppercase text-white/40">
+                    {img.caption}
+                  </figcaption>
+                </figure>
               ))}
             </div>
           </div>
@@ -315,15 +434,12 @@ export default function Home() {
             AMBITION
           </span>
           <div className="relative max-w-5xl mx-auto px-6 sm:px-10 lg:px-14 text-center">
-            <div className="text-xs tracking-[0.4em] uppercase text-white/50 mb-6 reveal">
-              Chapter 04
-            </div>
-            <h2 className="text-6xl md:text-8xl lg:text-9xl font-extrabold tracking-tight leading-[0.95] reveal reveal-delay-1">
+            <h2 className="text-6xl md:text-8xl lg:text-9xl font-extrabold tracking-tight leading-[0.95] reveal">
               改变
               <br />
               <span className="italic font-light text-white/85">世界</span>。
             </h2>
-            <p className="mt-12 max-w-2xl mx-auto text-base md:text-lg text-white/65 leading-relaxed reveal reveal-delay-2">
+            <p className="mt-12 max-w-2xl mx-auto text-base md:text-lg text-white/65 leading-relaxed reveal reveal-delay-1">
               这不是一句口号。它是每个清晨我推开门时的提醒——
               <br className="hidden md:block" />
               你可以更勇敢一点、更慷慨一点、更有耐心一点。
@@ -333,12 +449,12 @@ export default function Home() {
               而慢慢不同。
             </p>
 
-            <div className="mt-16 flex flex-col sm:flex-row gap-4 justify-center reveal reveal-delay-3">
+            <div className="mt-16 flex flex-col sm:flex-row gap-4 justify-center reveal reveal-delay-2">
               <Link
                 href="/blog"
                 className="inline-flex items-center justify-center px-10 py-4 border border-white/40 text-white text-sm tracking-widest uppercase hover:bg-white hover:text-black transition-all"
               >
-                查看作品
+                查看产品
               </Link>
               <Link
                 href="/about"
@@ -350,21 +466,16 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Works / 作品 */}
+        {/* Works / 产品 */}
         <section id="works" className="bg-black py-24 border-t border-white/10">
           <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-14">
             <div className="flex justify-between items-end mb-12 reveal">
-              <div>
-                <div className="text-xs tracking-[0.4em] uppercase text-white/50 mb-3">
-                  05 — Works
-                </div>
-                <h2 className="text-4xl md:text-5xl font-bold text-white">作品</h2>
-              </div>
+              <h2 className="text-4xl md:text-5xl font-bold text-white">产品</h2>
               <Link
                 href="/blog"
                 className="hidden md:inline-block text-sm tracking-widest uppercase text-white/70 hover:text-white border-b border-white/30 hover:border-white pb-1 transition-colors"
               >
-                View All →
+                查看全部 →
               </Link>
             </div>
 
@@ -381,76 +492,74 @@ export default function Home() {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-12 text-white/50">暂无作品</div>
+              <div className="text-center py-12 text-white/50">暂无产品</div>
             )}
           </div>
         </section>
 
-        {/* Hobbies / 爱好 */}
-        <section id="hobbies" className="bg-black py-24 border-t border-white/10">
-          <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-14">
-            <div className="mb-12 reveal">
-              <div className="text-xs tracking-[0.4em] uppercase text-white/50 mb-3">
-                06 — Hobbies
-              </div>
-              <h2 className="text-4xl md:text-5xl font-bold text-white">爱好</h2>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {[
-                { title: '编程 / Coding', desc: '探索新的语言、框架与开发工具，乐于解决复杂问题。' },
-                { title: '阅读 / Reading', desc: '科技、人文、设计——在不同领域间汲取灵感。' },
-                { title: '影像 / Visuals', desc: '关注视觉表达与动画，热爱有质感的设计语言。' },
-              ].map((item, idx) => (
-                <div
-                  key={item.title}
-                  className={`border border-white/10 p-8 hover:border-white/40 hover:bg-white/[0.03] transition-all duration-300 reveal reveal-delay-${Math.min(idx + 1, 3)}`}
-                >
-                  <h3 className="text-xl font-semibold text-white mb-3">{item.title}</h3>
-                  <p className="text-white/60 leading-relaxed">{item.desc}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Popular / 热门 */}
+        {/* Hot — Weekly Pick / 每周精选 */}
         <section id="popular" className="bg-black py-24 border-t border-white/10">
           <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-14">
-            <div className="mb-12 reveal">
-              <div className="text-xs tracking-[0.4em] uppercase text-white/50 mb-3">
-                07 — Popular
+            <div className="mb-12 reveal flex items-end justify-between flex-wrap gap-4">
+              <div>
+                <h2 className="text-4xl md:text-5xl font-bold text-white">每周精选</h2>
+                <div className="mt-3 text-sm tracking-widest uppercase text-white/40">
+                  本周值得停下来读 · 每周一更新
+                </div>
               </div>
-              <h2 className="text-4xl md:text-5xl font-bold text-white">热门</h2>
+              <div className="text-xs tracking-[0.35em] uppercase text-white/40 tabular-nums">
+                Week · {weeklyPicks.weekLabel}
+              </div>
             </div>
 
-            {loading ? (
-              <div className="text-center py-12 text-white/60">加载中...</div>
-            ) : popularArticles.length > 0 ? (
-              <div className="divide-y divide-white/10 border-y border-white/10">
-                {popularArticles.map((article, index) => (
-                  <Link
-                    key={article.id}
-                    href={`/blog/${article.slug}`}
-                    className="group flex items-center gap-6 py-6 hover:bg-white/[0.03] px-2 transition-colors reveal"
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {weeklyPicks.items.map((item, idx) => {
+                const meta = PICK_META[item.type];
+                return (
+                  <a
+                    key={item.url}
+                    href={item.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`group relative flex flex-col border border-white/10 bg-white/[0.02] p-6 md:p-7 hover:border-white/40 hover:bg-white/[0.05] transition-all duration-500 reveal reveal-delay-${Math.min((idx % 3) + 1, 3)}`}
                   >
-                    <span className="text-3xl md:text-4xl font-light text-white/30 w-12 tabular-nums">
-                      {String(index + 1).padStart(2, '0')}
-                    </span>
-                    <div className="flex-grow">
-                      <h3 className="text-lg md:text-xl font-medium text-white group-hover:text-white/90">
-                        {article.title}
-                      </h3>
-                      <div className="text-xs tracking-widest uppercase text-white/40 mt-2">
-                        {article.viewCount} Views · {new Date(article.createdAt).toLocaleDateString('zh-CN')}
-                      </div>
+                    {/* 类型 + 领域标签 */}
+                    <div className="flex items-center justify-between mb-5">
+                      <span className="inline-flex items-center gap-2 text-[11px] tracking-[0.3em] uppercase text-white/60">
+                        <span className={`w-1.5 h-1.5 rounded-full ${meta.dot}`} />
+                        {meta.label}
+                      </span>
+                      <span className="text-[11px] tracking-[0.3em] uppercase text-white/40">
+                        {item.topic}
+                      </span>
                     </div>
-                    <span className="text-white/40 group-hover:text-white group-hover:translate-x-1 transition-all">→</span>
-                  </Link>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12 text-white/50">暂无内容</div>
-            )}
+
+                    {/* 标题 */}
+                    <h3 className="text-lg md:text-xl font-semibold text-white leading-snug mb-3 group-hover:text-white">
+                      {item.title}
+                    </h3>
+
+                    {/* 来源 / 作者 */}
+                    <div className="text-xs tracking-widest uppercase text-white/40 mb-4">
+                      {item.source}
+                    </div>
+
+                    {/* Liu 的点评 */}
+                    {item.note && (
+                      <p className="text-sm text-white/65 leading-[1.8] flex-grow border-l-2 border-white/20 pl-4 italic">
+                        {item.note}
+                      </p>
+                    )}
+
+                    {/* 底部箭头 */}
+                    <div className="mt-6 flex items-center justify-between text-xs tracking-[0.3em] uppercase text-white/40 group-hover:text-white transition-colors">
+                      <span>Open</span>
+                      <span className="transition-transform group-hover:translate-x-1">→</span>
+                    </div>
+                  </a>
+                );
+              })}
+            </div>
           </div>
         </section>
       </main>
