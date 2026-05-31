@@ -228,6 +228,78 @@ export default function Home() {
           </div>
         </section>
 
+        {/* PROFILE / 自我介绍 */}
+        <section
+          id="profile"
+          className="relative bg-black py-28 md:py-36 border-t border-white/10 overflow-hidden"
+        >
+          <span className="chapter-bg top-10 right-[-2rem] select-none">PROFILE</span>
+          <div className="relative max-w-7xl mx-auto px-6 sm:px-10 lg:px-14">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
+              {/* 左：标题 + 一句话介绍 */}
+              <div className="lg:col-span-5 reveal">
+                <div className="text-xs tracking-[0.35em] uppercase text-white/40 mb-4">
+                  About Me
+                </div>
+                <h2 className="text-5xl md:text-6xl font-extrabold tracking-tight">
+                  关于我
+                </h2>
+                <p className="mt-6 text-base md:text-lg text-white/65 leading-relaxed">
+                  一个相信「长期主义」与「复利」的年轻人。
+                  <br />
+                  用代码、文字和好奇心，与世界保持连接。
+                </p>
+              </div>
+
+              {/* 右：基本信息卡片 + 箴言 */}
+              <div className="lg:col-span-7 reveal reveal-delay-1">
+                {/* 信息网格 */}
+                <dl className="grid grid-cols-2 sm:grid-cols-3 gap-px bg-white/10 border border-white/10">
+                  {[
+                    { label: '姓名', value: '刘文浩' },
+                    { label: '生日', value: '2005.05.23' },
+                    { label: '星座', value: '双子座' },
+                    { label: 'MBTI', value: 'ENFP' },
+                    { label: '坐标', value: '北京 · 海淀' },
+                    { label: '行业', value: '大数据 / AI' },
+                  ].map((item) => (
+                    <div
+                      key={item.label}
+                      className="bg-black px-5 py-6 transition-colors duration-300 hover:bg-white/[0.03]"
+                    >
+                      <dt className="text-[11px] tracking-[0.35em] uppercase text-white/40 mb-2">
+                        {item.label}
+                      </dt>
+                      <dd className="text-lg md:text-xl font-semibold text-white tabular-nums">
+                        {item.value}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+
+                {/* 箴言 */}
+                <figure className="mt-10 border-l-2 border-white/30 pl-6 md:pl-8">
+                  <div className="text-[11px] tracking-[0.35em] uppercase text-white/40 mb-3">
+                    Motto · 箴言
+                  </div>
+                  <blockquote className="text-2xl md:text-3xl font-bold leading-snug tracking-tight">
+                    «
+                    <span className="italic font-light text-white/85">
+                      &nbsp;这能有多难？&nbsp;
+                    </span>
+                    »
+                  </blockquote>
+                  <p className="mt-3 text-sm md:text-base text-white/55 leading-relaxed">
+                    Just do it.
+                    <br className="hidden sm:block" />
+                    去做。
+                  </p>
+                </figure>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* PAST / 过去 */}
         <section
           id="past"
