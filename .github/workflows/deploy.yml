@@ -9,6 +9,8 @@ on:
 env:
   IMAGE_BACKEND: ghcr.io/${{ github.repository_owner }}/isme-backend
   IMAGE_FRONTEND: ghcr.io/${{ github.repository_owner }}/isme-frontend
+  # 让 JS-based actions 运行在 Node 24，消除 Node 20 弃用警告
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
 concurrency:
   group: deploy-main
@@ -72,6 +74,8 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT || 22 }}
+          # 服务器拉取 GHCR 镜像可能较慢，放宽命令超时（默认仅 10m），避免大层下载被中断
+          command_timeout: 30m
           script: |
             set -e
             cd "${{ secrets.DEPLOY_PATH }}"
