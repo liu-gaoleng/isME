@@ -1,12 +1,11 @@
--- 创建数据库
-CREATE DATABASE IF NOT EXISTS personal_site 
-CHARACTER SET utf8mb4 
-COLLATE utf8mb4_unicode_ci;
-
-USE personal_site;
+-- ============================================================
+--  V1 初始 schema
+--  由 Flyway 在应用启动时执行，替代原 ddl-auto: update 与 docker initdb 的 schema.sql。
+--  本脚本只建表，不含 CREATE DATABASE / USE / IF NOT EXISTS（版本化迁移由 Flyway 跟踪）。
+-- ============================================================
 
 -- 用户表
-CREATE TABLE IF NOT EXISTS users (
+CREATE TABLE users (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50) NOT NULL UNIQUE,
     email VARCHAR(100) NOT NULL UNIQUE,
@@ -23,7 +22,7 @@ CREATE TABLE IF NOT EXISTS users (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 分类表
-CREATE TABLE IF NOT EXISTS categories (
+CREATE TABLE categories (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(50) NOT NULL UNIQUE,
     slug VARCHAR(50),
@@ -34,7 +33,7 @@ CREATE TABLE IF NOT EXISTS categories (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 标签表
-CREATE TABLE IF NOT EXISTS tags (
+CREATE TABLE tags (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(50) NOT NULL UNIQUE,
     slug VARCHAR(50),
@@ -43,7 +42,7 @@ CREATE TABLE IF NOT EXISTS tags (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 文章表
-CREATE TABLE IF NOT EXISTS articles (
+CREATE TABLE articles (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     title VARCHAR(200) NOT NULL,
     slug VARCHAR(200) NOT NULL UNIQUE,
@@ -67,7 +66,7 @@ CREATE TABLE IF NOT EXISTS articles (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 文章标签关联表
-CREATE TABLE IF NOT EXISTS article_tags (
+CREATE TABLE article_tags (
     article_id BIGINT NOT NULL,
     tag_id BIGINT NOT NULL,
     PRIMARY KEY (article_id, tag_id),
@@ -76,7 +75,7 @@ CREATE TABLE IF NOT EXISTS article_tags (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 评论表
-CREATE TABLE IF NOT EXISTS comments (
+CREATE TABLE comments (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     content TEXT NOT NULL,
     author_name VARCHAR(50),
@@ -88,24 +87,3 @@ CREATE TABLE IF NOT EXISTS comments (
     INDEX idx_article (article_id),
     INDEX idx_approved (is_approved)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- 插入默认管理员账户 (密码: admin123)
--- 密码是 BCrypt 加密后的结果
-INSERT INTO users (username, email, password, nickname, bio, role, enabled, created_at, updated_at)
-VALUES ('admin', 'admin@example.com', '$2a$10$XXXXXX', '博主', '这是博主的个人网站', 'ADMIN', TRUE, NOW(), NOW());
-
--- 插入默认分类
-INSERT INTO categories (name, slug, description, created_at, updated_at)
-VALUES 
-    ('技术', 'tech', '技术相关文章', NOW(), NOW()),
-    ('生活', 'life', '生活随笔', NOW(), NOW()),
-    ('随笔', 'essay', '杂文随想', NOW(), NOW());
-
--- 插入默认标签
-INSERT INTO tags (name, slug, created_at)
-VALUES 
-    ('Java', 'java', NOW()),
-    ('Spring Boot', 'spring-boot', NOW()),
-    ('React', 'react', NOW()),
-    ('Next.js', 'nextjs', NOW()),
-    ('MySQL', 'mysql', NOW());

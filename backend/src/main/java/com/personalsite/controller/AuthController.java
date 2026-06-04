@@ -5,6 +5,7 @@ import com.personalsite.dto.LoginResponse;
 import com.personalsite.dto.RegisterRequest;
 import com.personalsite.dto.UserDTO;
 import com.personalsite.entity.User;
+import com.personalsite.exception.BusinessException;
 import com.personalsite.repository.UserRepository;
 import com.personalsite.security.JwtUtil;
 import com.personalsite.service.UserService;
@@ -63,10 +64,10 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<UserDTO> register(@Valid @RequestBody RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("邮箱已被注册");
+            throw new BusinessException("邮箱已被注册");
         }
         if (userRepository.existsByUsername(request.getUsername())) {
-            throw new RuntimeException("用户名已存在");
+            throw new BusinessException("用户名已存在");
         }
 
         User user = new User();

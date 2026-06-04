@@ -4,9 +4,23 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { get, put } from '@/lib/api/client';
 import { API_ENDPOINTS } from '@/lib/api/config';
+import { categoryService, type Category } from '@/lib/api';
 import { Loading, ErrorMessage } from '@/components/Loading';
 
-interface Article {
+interface ArticleForm {
+  id: number;
+  title: string;
+  slug: string;
+  summary: string;
+  content: string;
+  coverImage: string;
+  isPublished: boolean;
+  isFeatured: boolean;
+  categoryId: string;
+  tagNames: string;
+}
+
+interface ArticleResponse {
   id: number;
   title: string;
   slug: string;
@@ -16,18 +30,25 @@ interface Article {
   isPublished: boolean;
   isFeatured: boolean;
   categoryId: number | null;
-  tagNames: string[];
+  tagNames: string[] | null;
 }
 
 export default function EditArticle() {
   const router = useRouter();
   const params = useParams();
   const articleId = params.id as string;
-  
-  const [formData, setFormData] = useState<Article | null>(null);
+
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [formData, setFormData] = useState<ArticleForm | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    categoryService.getAllCategories()
+      .then(setCategories)
+      .catch(() => setCategories([]));
+  }, []);
 
   useEffect(() => {
     loadArticle();
@@ -37,10 +58,18 @@ export default function EditArticle() {
     setLoading(true);
     setError(null);
     try {
-      const article = await get<Article>(`${API_ENDPOINTS.articles}/${articleId}`);
+      const article = await get<ArticleResponse>(`${API_ENDPOINTS.articles}/${articleId}`);
       setFormData({
-        ...article,
-        tagNames: article.tagNames || [],
+        id: article.id,
+        title: article.title ?? '',
+        slug: article.slug ?? '',
+        summary: article.summary ?? '',
+        content: article.content ?? '',
+        coverImage: article.coverImage ?? '',
+        isPublished: article.isPublished,
+        isFeatured: article.isFeatured,
+        categoryId: article.categoryId != null ? String(article.categoryId) : '',
+        tagNames: (article.tagNames || []).join(', '),
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : '加载失败');
@@ -61,14 +90,17 @@ export default function EditArticle() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!formData) return;
-    
+
     setSubmitting(true);
     setError(null);
 
     try {
       await put(`${API_ENDPOINTS.articles}/${articleId}`, {
         ...formData,
-        tagNames: formData.tagNames ? formData.tagNames.join(',') : [],
+        categoryId: formData.categoryId ? Number(formData.categoryId) : null,
+        tagNames: formData.tagNames
+          ? formData.tagNames.split(',').map(t => t.trim()).filter(Boolean)
+          : [],
       });
       router.push('/admin/articles');
     } catch (err) {
@@ -145,6 +177,33 @@ export default function EditArticle() {
             value={formData.coverImage}
             onChange={handleChange}
             className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">分类</label>
+          <select
+            name="categoryId"
+            value={formData.categoryId}
+            onChange={handleChange}
+            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          >
+            <option value="">选择分类</option>
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">标签</label>
+          <input
+            type="text"
+            name="tagNames"
+            value={formData.tagNames}
+            onChange={handleChange}
+            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="多个标签用逗号分隔"
           />
         </div>
 

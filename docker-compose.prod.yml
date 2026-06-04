@@ -1,4 +1,17 @@
-version: '3.8'
+# ============================================================
+#  生产部署 Compose
+#  前后端使用 CI 构建并推送到 GHCR 的镜像，服务器只需 pull，不现场构建。
+#  配合 .github/workflows/deploy.yml 使用。
+#
+#  服务器上手动操作：
+#    export IMAGE_TAG=latest            # 回滚时可指定某次提交的 git sha
+#    docker compose -f docker-compose.prod.yml pull
+#    docker compose -f docker-compose.prod.yml up -d
+#
+#  与开发用 docker-compose.yml 的区别：
+#    - backend/frontend 用 image 而非 build
+#    - 仅 nginx 对外暴露 80/443；mysql/backend/frontend 只在内网互通
+# ============================================================
 
 services:
   mysql:
@@ -9,8 +22,6 @@ services:
       MYSQL_DATABASE: personal_site
       MYSQL_USER: ${DB_USER:-admin}
       MYSQL_PASSWORD: ${DB_PASSWORD:?请在 .env 中配置 DB_PASSWORD}
-    ports:
-      - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
       # schema 已改由后端 Flyway 迁移管理（db/migration），不再用 initdb 脚本建表
@@ -22,36 +33,24 @@ services:
     restart: always
 
   backend:
-    build:
-      context: .
-      dockerfile: backend/Dockerfile
+    image: ghcr.io/liu-gaoleng/isme-backend:${IMAGE_TAG:-latest}
     container_name: personal-site-backend
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/personal_site?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
       SPRING_DATASOURCE_USERNAME: ${DB_USER:-admin}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:?请在 .env 中配置 DB_PASSWORD}
       JWT_SECRET: ${JWT_SECRET:?请在 .env 中配置一个 32+ 字符的强随机 JWT_SECRET}
-      APP_CORS_ALLOWED_ORIGINS: ${APP_CORS_ALLOWED_ORIGINS:-http://localhost:3000}
-    ports:
-      - "8080:8080"
+      APP_CORS_ALLOWED_ORIGINS: ${APP_CORS_ALLOWED_ORIGINS:-https://liuxxs.com,https://www.liuxxs.com}
     depends_on:
       mysql:
         condition: service_healthy
     restart: always
 
   frontend:
-    build:
-      context: .
-      dockerfile: Dockerfile.frontend
-      args:
-        # NEXT_PUBLIC_* 变量必须在构建阶段注入，next build 时会写死到产物中
-        NEXT_PUBLIC_API_URL: ${API_URL:-http://localhost:8080}
+    # 注意：NEXT_PUBLIC_API_URL 在镜像构建阶段已写死（见 deploy.yml 的 build-args），
+    # 这里无需再传。
+    image: ghcr.io/liu-gaoleng/isme-frontend:${IMAGE_TAG:-latest}
     container_name: personal-site-frontend
-    ports:
-      - "3000:3000"
-    environment:
-      NEXT_PUBLIC_API_URL: ${API_URL:-http://localhost:8080}
-      # NEXT_PUBLIC_API_URL: https://api.yourdomain.com # 如果你有真实域名，上线时请替换为你的真实API域名
     depends_on:
       - backend
     restart: always

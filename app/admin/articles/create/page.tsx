@@ -1,13 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { post } from '@/lib/api/client';
 import { API_ENDPOINTS } from '@/lib/api/config';
+import { categoryService, type Category } from '@/lib/api';
 import { ErrorMessage } from '@/components/Loading';
 
 export default function CreateArticle() {
     const router = useRouter();
+    const [categories, setCategories] = useState<Category[]>([]);
     const [formData, setFormData] = useState({
         title: '',
         slug: '',
@@ -21,6 +23,12 @@ export default function CreateArticle() {
     });
     const [error, setError] = useState<string | null>(null);
     const [submitting, setSubmitting] = useState(false);
+
+    useEffect(() => {
+        categoryService.getAllCategories()
+            .then(setCategories)
+            .catch(() => setCategories([]));
+    }, []);
 
     function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
         const { name, value, type } = e.target;
@@ -129,6 +137,9 @@ export default function CreateArticle() {
                         className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
                         <option value="">选择分类</option>
+                        {categories.map((c) => (
+                            <option key={c.id} value={c.id}>{c.name}</option>
+                        ))}
                     </select>
                 </div>
 

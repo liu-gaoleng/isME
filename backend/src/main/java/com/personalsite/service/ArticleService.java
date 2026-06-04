@@ -101,7 +101,7 @@ public class ArticleService {
     
     private ArticleDTO saveArticle(Article article, ArticleDTO dto) {
         article.setTitle(dto.getTitle());
-        article.setSlug(dto.getSlug());
+        article.setSlug(normalizeSlug(dto.getSlug(), dto.getTitle()));
         article.setContent(dto.getContent());
         article.setSummary(dto.getSummary());
         article.setCoverImage(dto.getCoverImage());
@@ -142,6 +142,24 @@ public class ArticleService {
         return toDTO(articleRepository.save(article));
     }
     
+    /**
+     * 规范化 slug：为空时基于标题自动生成，并追加时间戳保证唯一，
+     * 避免数据库 slug NOT NULL UNIQUE 约束在空串时冲突。
+     */
+    private String normalizeSlug(String slug, String title) {
+        String base = slug == null ? "" : slug.trim();
+        if (base.isEmpty()) {
+            String fromTitle = title == null ? "" : title.trim().toLowerCase()
+                    .replaceAll("[^a-z0-9\\u4e00-\\u9fa5]+", "-")
+                    .replaceAll("(^-+)|(-+$)", "");
+            if (fromTitle.isEmpty()) {
+                fromTitle = "article";
+            }
+            base = fromTitle + "-" + System.currentTimeMillis();
+        }
+        return base;
+    }
+
     private ArticleDTO toDTO(Article article) {
         ArticleDTO dto = new ArticleDTO();
         dto.setId(article.getId());

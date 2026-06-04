@@ -4,22 +4,44 @@ server:
 spring:
   application:
     name: personal-site-backend
-    
+
+  # 敏感配置一律通过环境变量注入（见 docker-compose.yml / .env）。
+  # 冒号后的默认值仅用于本地开发，生产环境必须由环境变量覆盖。
   datasource:
-    url: jdbc:mysql://localhost:3306/personal_site?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
-    username: root
-    password: your_password
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/personal_site?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true}
+    username: ${SPRING_DATASOURCE_USERNAME:root}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
     driver-class-name: com.mysql.cj.jdbc.Driver
-    
+
   jpa:
     hibernate:
-      ddl-auto: update
+      # schema 改由 Flyway 管理；Hibernate 仅校验实体与表结构是否一致（不再自动改表）
+      ddl-auto: validate
     show-sql: true
     properties:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.MySQLDialect
 
+  # 数据库版本化迁移：启动时自动执行 classpath:db/migration 下的 V*.sql
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    # 对已有数据但尚无 flyway 历史表的库做基线，避免首次接入时报错。
+    # 注意：若库里已存在同名表（来自旧的 ddl-auto/initdb），需先清库或手动 baseline 到 V1。
+    baseline-on-migrate: true
+
 jwt:
-  secret: your-256-bit-secret-key-here-must-be-at-least-32-characters-long
-  expiration: 86400000
+  # 绝不要把真实密钥提交进仓库。本地无环境变量时用下面的开发占位密钥（仅供本地启动）。
+  secret: ${JWT_SECRET:dev-only-insecure-secret-key-change-me-in-production-32+}
+  expiration: ${JWT_EXPIRATION:86400000}
+
+app:
+  cors:
+    # 允许跨域访问的前端来源，逗号分隔。生产用 APP_CORS_ALLOWED_ORIGINS 注入真实域名。
+    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:3000}
+  # 启动时自动创建的初始管理员账户。生产环境必须通过环境变量覆盖以下三项。
+  admin:
+    username: ${ADMIN_USERNAME:admin}
+    email: ${ADMIN_EMAIL:admin@example.com}
+    password: ${ADMIN_PASSWORD:admin123}

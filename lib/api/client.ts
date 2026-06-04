@@ -27,6 +27,17 @@ class ApiError extends Error {
 
 async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
+    // 鉴权失效：清除本地登录态并跳转登录页（仅浏览器端）
+    if ((response.status === 401 || response.status === 403) && typeof window !== 'undefined') {
+      const onAdmin = window.location.pathname.startsWith('/admin');
+      if (onAdmin) {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('authUser');
+        const redirect = encodeURIComponent(window.location.pathname);
+        window.location.href = `/login?redirect=${redirect}`;
+      }
+    }
+
     let errorMessage = `HTTP error! status: ${response.status}`;
     try {
       const result = await response.json();
