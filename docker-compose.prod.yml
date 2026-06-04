@@ -1,10 +1,13 @@
 # ============================================================
 #  生产部署 Compose
-#  前后端使用 CI 构建并推送到 GHCR 的镜像，服务器只需 pull，不现场构建。
+#  前后端使用 CI 构建并推送到阿里云 ACR 的镜像，服务器只需 pull，不现场构建。
 #  配合 .github/workflows/deploy.yml 使用。
 #
-#  服务器上手动操作：
-#    export IMAGE_TAG=latest            # 回滚时可指定某次提交的 git sha
+#  服务器上手动操作（CI/CD 之外回滚或调试时）：
+#    export ACR_REGISTRY=registry.cn-xxx.aliyuncs.com
+#    export ACR_NAMESPACE=isme
+#    export IMAGE_TAG=latest          # 回滚时可指定某次提交的 git sha
+#    docker login $ACR_REGISTRY -u <账号ID>
 #    docker compose -f docker-compose.prod.yml pull
 #    docker compose -f docker-compose.prod.yml up -d
 #
@@ -33,7 +36,7 @@ services:
     restart: always
 
   backend:
-    image: ghcr.io/liu-gaoleng/isme-backend:${IMAGE_TAG:-latest}
+    image: ${ACR_REGISTRY:?需在 .env 或 deploy 脚本中导出 ACR_REGISTRY}/${ACR_NAMESPACE:?需在 .env 或 deploy 脚本中导出 ACR_NAMESPACE}/isme-backend:${IMAGE_TAG:-latest}
     container_name: personal-site-backend
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/personal_site?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
@@ -49,7 +52,7 @@ services:
   frontend:
     # 注意：NEXT_PUBLIC_API_URL 在镜像构建阶段已写死（见 deploy.yml 的 build-args），
     # 这里无需再传。
-    image: ghcr.io/liu-gaoleng/isme-frontend:${IMAGE_TAG:-latest}
+    image: ${ACR_REGISTRY:?需在 .env 或 deploy 脚本中导出 ACR_REGISTRY}/${ACR_NAMESPACE:?需在 .env 或 deploy 脚本中导出 ACR_NAMESPACE}/isme-frontend:${IMAGE_TAG:-latest}
     container_name: personal-site-frontend
     depends_on:
       - backend

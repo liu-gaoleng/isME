@@ -1,14 +1,16 @@
 name: Deploy
 
-# 推送到 main（或手动触发）时：构建前后端镜像推送到 GHCR，再 SSH 到服务器拉取重启。
+# 推送到 main（或手动触发）时：构建前后端镜像推送到阿里云 ACR，再 SSH 到服务器拉取重启。
+# 切到 ACR 是因为服务器在国内（腾讯云轻量），跨境拉 GHCR 速度极慢/不稳定。
 on:
   push:
     branches: [ main ]
   workflow_dispatch:
 
 env:
-  IMAGE_BACKEND: ghcr.io/${{ github.repository_owner }}/isme-backend
-  IMAGE_FRONTEND: ghcr.io/${{ github.repository_owner }}/isme-frontend
+  # 镜像完整地址 = <ACR_REGISTRY>/<ACR_NAMESPACE>/<repo>
+  IMAGE_BACKEND: ${{ secrets.ACR_REGISTRY }}/${{ secrets.ACR_NAMESPACE }}/isme-backend
+  IMAGE_FRONTEND: ${{ secrets.ACR_REGISTRY }}/${{ secrets.ACR_NAMESPACE }}/isme-frontend
   # 让 JS-based actions 运行在 Node 24，消除 Node 20 弃用警告
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
@@ -18,23 +20,20 @@ concurrency:
 
 jobs:
   build-and-push:
-    name: 构建并推送镜像到 GHCR
+    name: 构建并推送镜像到阿里云 ACR
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
     steps:
       - uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: 登录 GHCR
+      - name: 登录阿里云 ACR
         uses: docker/login-action@v3
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          registry: ${{ secrets.ACR_REGISTRY }}
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
 
       - name: 构建并推送后端镜像
         uses: docker/build-push-action@v6
@@ -74,19 +73,24 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT || 22 }}
-          # 服务器拉取 GHCR 镜像可能较慢，放宽命令超时（默认仅 10m），避免大层下载被中断
-          command_timeout: 30m
+          # 国内拉 ACR 一般很快，但保留较大超时以防万一
+          command_timeout: 20m
           script: |
             set -e
             cd "${{ secrets.DEPLOY_PATH }}"
             # 拉取最新的 compose / nginx 配置等（镜像不在仓库里，仅配置文件）
             git pull --ff-only
-            # 登录 GHCR 以拉取私有镜像（GITHUB_TOKEN 仅在本次部署期间有效）
-            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+            # 登录阿里云 ACR 拉取私有镜像
+            echo "${{ secrets.ACR_PASSWORD }}" | docker login "${{ secrets.ACR_REGISTRY }}" -u "${{ secrets.ACR_USERNAME }}" --password-stdin
+
             # 用本次提交的 sha 作为镜像标签，保证拉到的就是刚构建的版本
             export IMAGE_TAG="${{ github.sha }}"
+            export ACR_REGISTRY="${{ secrets.ACR_REGISTRY }}"
+            export ACR_NAMESPACE="${{ secrets.ACR_NAMESPACE }}"
+
             docker compose -f docker-compose.prod.yml pull
             docker compose -f docker-compose.prod.yml up -d
             # 清理悬空镜像，释放磁盘
             docker image prune -f
-            docker logout ghcr.io
+            docker logout "${{ secrets.ACR_REGISTRY }}"
