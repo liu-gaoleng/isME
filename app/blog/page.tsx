@@ -77,8 +77,9 @@ export default function ProductsPage() {
             </p>
             <div className="mt-8 space-y-5 text-white/75 text-base md:text-lg leading-[1.9] reveal reveal-delay-2">
               <p>
-                比起空谈想法，我更愿意拿作品说话。下面是我目前完成或正在推进的个人产品——
-                数量还不多，但每一个都是我从零搭起来的。更多产品（包括我正在构思的 App）还在路上。
+                我要着手做自己的产品，或许是下一个 web，下一个 app 亦或是下一个游戏，但定会拿出有限的时间与精力来投入其中。
+                我的愿景就是通过自己的产品或服务来给社会提供独一无二、不可或缺的价值，而不是老老实实上班。
+                目前正在有想法的是当前的个人博客网站与一个 ...app，app 的功能就先不透露了，尽情期待吧。just do it.
               </p>
             </div>
           </section>

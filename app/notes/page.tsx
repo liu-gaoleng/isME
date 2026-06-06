@@ -48,29 +48,17 @@ export default function NotesPage() {
             <p className="text-2xl md:text-3xl font-semibold leading-snug text-white tracking-tight reveal">
               {activeMeta.intro}
             </p>
-            <div className="mt-8 space-y-5 text-white/75 text-base md:text-lg leading-[1.9] reveal reveal-delay-1">
-              {activeTab === 'musing' ? (
-                <>
-                  <p>
-                    这里收集那些没必要写成长文、却又舍不得让它从思绪里溜走的片段——
-                    可能是一段调试的领悟、一行书里的句子、一个深夜的胡思乱想。
-                  </p>
-                  <p>
-                    它是介于&ldquo;博客&rdquo;与&ldquo;消失&rdquo;之间的中间态：留下来，但保持轻盈。
-                  </p>
-                </>
-              ) : (
-                <>
-                  <p>
-                    这里收录有架构、有逻辑、可复用的知识——技术原理、读书心得、方法论。
-                    如果说&ldquo;碎碎念&rdquo;是火花，这里就是被收进炉子里、能再次取暖的木头。
-                  </p>
-                  <p>
-                    点开任意一篇，可以看到完整的章节展开。
-                  </p>
-                </>
-              )}
-            </div>
+            {activeTab === 'essay' && (
+              <div className="mt-8 space-y-5 text-white/75 text-base md:text-lg leading-[1.9] reveal reveal-delay-1">
+                <p>
+                  这里收录有架构、有逻辑、可复用的知识——技术原理、读书心得、方法论。
+                  如果说&ldquo;碎碎念&rdquo;是火花，这里就是被收进炉子里、能再次取暖的木头。
+                </p>
+                <p>
+                  点开任意一篇，可以看到完整的章节展开。
+                </p>
+              </div>
+            )}
           </section>
 
           {/* Tab 切换 */}
