@@ -4,8 +4,6 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import ArticleCard from '@/components/ArticleCard';
-import { Article } from '@/lib/api';
 import { useScrollReveal } from '@/lib/useScrollReveal';
 
 /* ============================================================
@@ -96,9 +94,6 @@ const weeklyPicks: { weekLabel: string; items: WeeklyPickItem[] } = {
 };
 
 export default function Home() {
-  const [featuredArticles, setFeaturedArticles] = useState<Article[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
 
   // 启用滚动揭示动画
@@ -114,24 +109,6 @@ export default function Home() {
     window.addEventListener('scroll', onScroll, { passive: true });
     onScroll();
     return () => window.removeEventListener('scroll', onScroll);
-  }, []);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const featured = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/articles/featured`
-        ).then((r) => r.json());
-
-        setFeaturedArticles(featured.data || []);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : '加载失败');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
   }, []);
 
   return (
@@ -535,37 +512,6 @@ export default function Home() {
                 与我同行
               </Link>
             </div>
-          </div>
-        </section>
-
-        {/* Works / 产品 */}
-        <section id="works" className="bg-black py-24 border-t border-white/10">
-          <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-14">
-            <div className="flex justify-between items-end mb-12 reveal">
-              <h2 className="text-4xl md:text-5xl font-bold text-white">产品</h2>
-              <Link
-                href="/blog"
-                className="hidden md:inline-block text-sm tracking-widest uppercase text-white/70 hover:text-white border-b border-white/30 hover:border-white pb-1 transition-colors"
-              >
-                查看全部 →
-              </Link>
-            </div>
-
-            {loading ? (
-              <div className="text-center py-12 text-white/60">加载中...</div>
-            ) : error ? (
-              <div className="text-center py-12 text-red-400">{error}</div>
-            ) : featuredArticles.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {featuredArticles.slice(0, 6).map((article, idx) => (
-                  <div key={article.id} className={`reveal reveal-delay-${Math.min(idx % 3 + 1, 3)}`}>
-                    <ArticleCard article={article} />
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12 text-white/50">暂无产品</div>
-            )}
           </div>
         </section>
 

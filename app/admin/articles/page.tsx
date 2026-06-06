@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { get, post, del, PageResponse } from '@/lib/api/client';
+import { get, del } from '@/lib/api/client';
 import { API_ENDPOINTS } from '@/lib/api/config';
 import { Loading, ErrorMessage } from '@/components/Loading';
 
@@ -20,20 +20,18 @@ export default function AdminArticles() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [page, setPage] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
 
   useEffect(() => {
     loadArticles();
-  }, [page]);
+  }, []);
 
   async function loadArticles() {
     setLoading(true);
     setError(null);
     try {
-      const result = await get<PageResponse<Article>>(`${API_ENDPOINTS.articles}?page=${page}&size=10`);
-      setArticles(result.content);
-      setTotalPages(result.totalPages);
+      // 后台列表用 admin/all：包含草稿与已发布的全部文章
+      const result = await get<Article[]>(`${API_ENDPOINTS.articles}/admin/all`);
+      setArticles(result);
     } catch (err) {
       setError(err instanceof Error ? err.message : '加载失败');
     } finally {
@@ -113,28 +111,6 @@ export default function AdminArticles() {
           </tbody>
         </table>
       </div>
-
-      {totalPages > 1 && (
-        <div className="mt-4 flex justify-center">
-          <nav className="flex items-center space-x-2">
-            <button
-              onClick={() => setPage(Math.max(0, page - 1))}
-              disabled={page === 0}
-              className="px-3 py-1 border rounded disabled:opacity-50"
-            >
-              上一页
-            </button>
-            <span className="px-3 py-1">第 {page + 1} / {totalPages} 页</span>
-            <button
-              onClick={() => setPage(Math.min(totalPages - 1, page + 1))}
-              disabled={page === totalPages - 1}
-              className="px-3 py-1 border rounded disabled:opacity-50"
-            >
-              下一页
-            </button>
-          </nav>
-        </div>
-      )}
     </div>
   );
 }

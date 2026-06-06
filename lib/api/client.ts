@@ -113,5 +113,25 @@ export async function del<T>(url: string): Promise<T> {
   return handleResponse<T>(response);
 }
 
+// 文件上传：用 FormData 提交，不能手动设置 Content-Type（需让浏览器自动带 multipart boundary）。
+export async function upload<T>(url: string, file: File): Promise<T> {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const headers = new Headers();
+  const token = localStorage.getItem('accessToken');
+  if (token) {
+    headers.set('Authorization', `Bearer ${token}`);
+  }
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers,
+    body: formData,
+  });
+
+  return handleResponse<T>(response);
+}
+
 export type { ApiResponse, PageResponse };
 export { ApiError };

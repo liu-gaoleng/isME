@@ -14,7 +14,7 @@ public class ArticleDTO {
     @Size(max = 200, message = "标题长度不能超过200个字符")
     private String title;
     
-    @NotBlank(message = "Slug不能为空")
+    // slug 可留空：ArticleService 会基于标题自动生成并保证唯一
     private String slug;
     
     @NotBlank(message = "内容不能为空")

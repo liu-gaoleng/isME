@@ -14,6 +14,9 @@ export const API_ENDPOINTS = {
   // 管理接口
   users: `${API_BASE_URL}/api/users`,
   admin: `${API_BASE_URL}/api/admin`,
+
+  // 文件上传
+  uploadImage: `${API_BASE_URL}/api/upload/image`,
 };
 
 export default API_BASE_URL;

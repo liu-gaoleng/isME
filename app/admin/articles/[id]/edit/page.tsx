@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { get, put } from '@/lib/api/client';
+import { get, put, upload } from '@/lib/api/client';
 import { API_ENDPOINTS } from '@/lib/api/config';
+import API_BASE_URL from '@/lib/api/config';
 import { categoryService, type Category } from '@/lib/api';
 import { Loading, ErrorMessage } from '@/components/Loading';
+import RichTextEditor from '@/components/RichTextEditor';
 
 interface ArticleForm {
   id: number;
@@ -43,6 +45,7 @@ export default function EditArticle() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [uploadingCover, setUploadingCover] = useState(false);
 
   useEffect(() => {
     categoryService.getAllCategories()
@@ -85,6 +88,22 @@ export default function EditArticle() {
       ...prev!,
       [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value,
     }));
+  }
+
+  async function handleCoverUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file || !formData) return;
+    setUploadingCover(true);
+    setError(null);
+    try {
+      const res = await upload<{ url: string }>(API_ENDPOINTS.uploadImage, file);
+      setFormData(prev => ({ ...prev!, coverImage: `${API_BASE_URL}${res.url}` }));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '封面上传失败');
+    } finally {
+      setUploadingCover(false);
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -159,25 +178,32 @@ export default function EditArticle() {
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">内容 *</label>
-          <textarea
-            name="content"
+          <RichTextEditor
             value={formData.content}
-            onChange={handleChange}
-            required
-            rows={10}
-            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            onChange={(html) => setFormData(prev => ({ ...prev!, content: html }))}
           />
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">封面图片</label>
-          <input
-            type="text"
-            name="coverImage"
-            value={formData.coverImage}
-            onChange={handleChange}
-            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
+          <div className="flex items-center space-x-3">
+            <input
+              type="text"
+              name="coverImage"
+              value={formData.coverImage}
+              onChange={handleChange}
+              className="flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="图片URL，或点击右侧上传"
+            />
+            <label className="px-4 py-2 border rounded-lg cursor-pointer hover:bg-gray-50 whitespace-nowrap text-sm">
+              {uploadingCover ? '上传中...' : '上传'}
+              <input type="file" accept="image/*" className="hidden" onChange={handleCoverUpload} disabled={uploadingCover} />
+            </label>
+          </div>
+          {formData.coverImage && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={formData.coverImage} alt="封面预览" className="mt-2 h-32 rounded object-cover" />
+          )}
         </div>
 
         <div>

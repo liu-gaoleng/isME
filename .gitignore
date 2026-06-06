@@ -28,3 +28,6 @@ Thumbs.db
 # 原始素材（仅根目录的本地原图，不影响 public/material 下的网站资源）
 /material/
 
+# 运行时上传目录（用户上传的图片，不纳入版本控制）
+backend/uploads/
+
