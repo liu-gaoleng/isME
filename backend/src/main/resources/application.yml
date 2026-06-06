@@ -17,6 +17,9 @@ spring:
     hibernate:
       # schema 改由 Flyway 管理；Hibernate 仅校验实体与表结构是否一致（不再自动改表）
       ddl-auto: validate
+    # 关闭 Open Session In View，避免在 view 渲染期间触发数据库查询，
+    # 强制所有 LAZY 关联在 Service 层（@Transactional）内显式加载。
+    open-in-view: false
     show-sql: true
     properties:
       hibernate:

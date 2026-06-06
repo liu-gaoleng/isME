@@ -5,6 +5,7 @@ import com.personalsite.entity.Article;
 import com.personalsite.entity.Category;
 import com.personalsite.entity.Tag;
 import com.personalsite.entity.User;
+import com.personalsite.exception.BusinessException;
 import com.personalsite.repository.ArticleRepository;
 import com.personalsite.repository.CategoryRepository;
 import com.personalsite.repository.TagRepository;
@@ -17,6 +18,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -24,6 +26,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class ArticleService {
     private final ArticleRepository articleRepository;
     private final CategoryRepository categoryRepository;
@@ -38,13 +41,13 @@ public class ArticleService {
     
     public ArticleDTO getArticleById(Long id) {
         Article article = articleRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("文章不存在"));
+                .orElseThrow(() -> new BusinessException("文章不存在"));
         return toDTO(article);
     }
     
     public ArticleDTO getArticleBySlug(String slug) {
         Article article = articleRepository.findBySlug(slug)
-                .orElseThrow(() -> new RuntimeException("文章不存在"));
+                .orElseThrow(() -> new BusinessException("文章不存在"));
         return toDTO(article);
     }
     
@@ -79,14 +82,14 @@ public class ArticleService {
     @Transactional
     public ArticleDTO updateArticle(Long id, ArticleDTO articleDTO) {
         Article article = articleRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("文章不存在"));
+                .orElseThrow(() -> new BusinessException("文章不存在"));
         return saveArticle(article, articleDTO);
     }
     
     @Transactional
     public void deleteArticle(Long id) {
         if (!articleRepository.existsById(id)) {
-            throw new RuntimeException("文章不存在");
+            throw new BusinessException("文章不存在");
         }
         articleRepository.deleteById(id);
     }
@@ -94,7 +97,7 @@ public class ArticleService {
     @Transactional
     public void incrementViewCount(Long id) {
         Article article = articleRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("文章不存在"));
+                .orElseThrow(() -> new BusinessException("文章不存在"));
         article.setViewCount(article.getViewCount() + 1);
         articleRepository.save(article);
     }
@@ -110,13 +113,13 @@ public class ArticleService {
         
         if (dto.getCategoryId() != null) {
             Category category = categoryRepository.findById(dto.getCategoryId())
-                    .orElseThrow(() -> new RuntimeException("分类不存在"));
+                    .orElseThrow(() -> new BusinessException("分类不存在"));
             article.setCategory(category);
         }
         
         if (dto.getAuthorId() != null) {
             User author = userRepository.findById(dto.getAuthorId())
-                    .orElseThrow(() -> new RuntimeException("作者不存在"));
+                    .orElseThrow(() -> new BusinessException("作者不存在"));
             article.setAuthor(author);
         }
         
@@ -189,6 +192,9 @@ public class ArticleService {
             dto.setTagNames(article.getTags().stream()
                     .map(Tag::getName)
                     .collect(Collectors.toSet()));
+        } else {
+            // 始终返回空集合而不是 null，避免前端 .map of undefined
+            dto.setTagNames(Collections.emptySet());
         }
         
         return dto;

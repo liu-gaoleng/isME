@@ -45,11 +45,11 @@ public class SecurityConfig {
                 // 创建账户走 anyRequest().hasRole("ADMIN")，即只有管理员能新建用户。
                 .requestMatchers("/api/auth/login").permitAll()
                 .requestMatchers("/swagger-ui/**", "/api-docs/**", "/v3/api-docs/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/actuator/health").permitAll()
 
                 // ---- 仅管理员：必须声明在下方 GET 通配规则之前，否则会被放行 ----
                 .requestMatchers(HttpMethod.GET, "/api/articles/admin/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.GET, "/api/comments/pending").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.GET, "/api/comments/admin/**").hasRole("ADMIN")
 
                 // ---- 公开只读：博客内容 ----
                 .requestMatchers(HttpMethod.GET,

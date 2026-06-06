@@ -3,6 +3,7 @@ package com.personalsite.controller;
 import com.personalsite.dto.ApiResponse;
 import com.personalsite.dto.ArticleDTO;
 import com.personalsite.service.ArticleService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
@@ -56,12 +57,12 @@ public class ArticleController {
     }
     
     @PostMapping
-    public ApiResponse<ArticleDTO> createArticle(@RequestBody ArticleDTO articleDTO) {
+    public ApiResponse<ArticleDTO> createArticle(@Valid @RequestBody ArticleDTO articleDTO) {
         return ApiResponse.success("文章创建成功", articleService.createArticle(articleDTO));
     }
     
     @PutMapping("/{id}")
-    public ApiResponse<ArticleDTO> updateArticle(@PathVariable Long id, @RequestBody ArticleDTO articleDTO) {
+    public ApiResponse<ArticleDTO> updateArticle(@PathVariable Long id, @Valid @RequestBody ArticleDTO articleDTO) {
         return ApiResponse.success("文章更新成功", articleService.updateArticle(id, articleDTO));
     }
     

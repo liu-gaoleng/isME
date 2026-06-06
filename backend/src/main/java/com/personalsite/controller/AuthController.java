@@ -1,5 +1,6 @@
 package com.personalsite.controller;
 
+import com.personalsite.dto.ApiResponse;
 import com.personalsite.dto.LoginRequest;
 import com.personalsite.dto.LoginResponse;
 import com.personalsite.dto.RegisterRequest;
@@ -12,7 +13,6 @@ import com.personalsite.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -38,7 +38,7 @@ public class AuthController {
     private Long expiration;
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
+    public ApiResponse<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         authenticationManager.authenticate(
             new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
         );
@@ -48,7 +48,7 @@ public class AuthController {
         
         User user = userRepository.findByEmail(request.getEmail()).orElseThrow();
         
-        return ResponseEntity.ok(LoginResponse.builder()
+        return ApiResponse.success(LoginResponse.builder()
             .accessToken(jwt)
             .tokenType("Bearer")
             .expiresIn(expiration)
@@ -62,7 +62,7 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<UserDTO> register(@Valid @RequestBody RegisterRequest request) {
+    public ApiResponse<UserDTO> register(@Valid @RequestBody RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new BusinessException("邮箱已被注册");
         }
@@ -79,7 +79,7 @@ public class AuthController {
         
         User savedUser = userRepository.save(user);
 
-        return ResponseEntity.ok(UserDTO.builder()
+        return ApiResponse.success(UserDTO.builder()
             .id(savedUser.getId())
             .username(savedUser.getUsername())
             .email(savedUser.getEmail())

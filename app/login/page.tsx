@@ -9,7 +9,12 @@ import { ErrorMessage } from '@/components/Loading';
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirect = searchParams.get('redirect') || '/admin';
+  // 只允许跳回站内路径，避免 ?redirect=//evil.com 这种开放重定向
+  const rawRedirect = searchParams.get('redirect');
+  const redirect =
+    rawRedirect && rawRedirect.startsWith('/') && !rawRedirect.startsWith('//')
+      ? rawRedirect
+      : '/admin';
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

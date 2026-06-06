@@ -1,14 +1,7 @@
 import type { NextConfig } from "next";
 
-const nextConfig: NextConfig = {
-  // 生产构建时跳过 ESLint 检查（避免因 lint 警告而构建失败）
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-  // 生产构建时跳过 TypeScript 类型错误（避免因类型不匹配而构建失败）
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-};
+// Next.js 16 已移除内置 next.config 中的 eslint 选项；ESLint 现在以独立 flat config 运行。
+// TS 类型错误必须暴露——任何类型错误都应被构建发现并修复（不再设置 typescript.ignoreBuildErrors）。
+const nextConfig: NextConfig = {};
 
 export default nextConfig;

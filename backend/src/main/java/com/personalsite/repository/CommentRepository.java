@@ -10,5 +10,6 @@ import org.springframework.stereotype.Repository;
 public interface CommentRepository extends JpaRepository<Comment, Long> {
     Page<Comment> findByArticleIdAndIsApprovedTrue(Long articleId, Pageable pageable);
     Page<Comment> findByIsApprovedFalse(Pageable pageable);
+    Page<Comment> findByIsApproved(Boolean isApproved, Pageable pageable);
     Long countByArticleIdAndIsApprovedTrue(Long articleId);
 }

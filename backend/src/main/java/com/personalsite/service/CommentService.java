@@ -3,6 +3,7 @@ package com.personalsite.service;
 import com.personalsite.dto.CommentDTO;
 import com.personalsite.entity.Article;
 import com.personalsite.entity.Comment;
+import com.personalsite.exception.BusinessException;
 import com.personalsite.repository.ArticleRepository;
 import com.personalsite.repository.CommentRepository;
 import lombok.RequiredArgsConstructor;
@@ -31,13 +32,24 @@ public class CommentService {
     
     public CommentDTO getCommentById(Long id) {
         Comment comment = commentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("评论不存在"));
+                .orElseThrow(() -> new BusinessException("评论不存在"));
         return toDTO(comment);
     }
     
     public Page<CommentDTO> getPendingComments(int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         return commentRepository.findByIsApprovedFalse(pageable).map(this::toDTO);
+    }
+
+    /**
+     * 后台列表：按审核状态筛选；status 为 null 表示全部。
+     */
+    public Page<CommentDTO> getCommentsByStatus(Boolean isApproved, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        if (isApproved == null) {
+            return commentRepository.findAll(pageable).map(this::toDTO);
+        }
+        return commentRepository.findByIsApproved(isApproved, pageable).map(this::toDTO);
     }
     
     @Transactional
@@ -50,7 +62,7 @@ public class CommentService {
         
         if (commentDTO.getArticleId() != null) {
             Article article = articleRepository.findById(commentDTO.getArticleId())
-                    .orElseThrow(() -> new RuntimeException("文章不存在"));
+                    .orElseThrow(() -> new BusinessException("文章不存在"));
             comment.setArticle(article);
         }
         
@@ -60,15 +72,23 @@ public class CommentService {
     @Transactional
     public CommentDTO approveComment(Long id) {
         Comment comment = commentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("评论不存在"));
+                .orElseThrow(() -> new BusinessException("评论不存在"));
         comment.setIsApproved(true);
+        return toDTO(commentRepository.save(comment));
+    }
+
+    @Transactional
+    public CommentDTO rejectComment(Long id) {
+        Comment comment = commentRepository.findById(id)
+                .orElseThrow(() -> new BusinessException("评论不存在"));
+        comment.setIsApproved(false);
         return toDTO(commentRepository.save(comment));
     }
     
     @Transactional
     public void deleteComment(Long id) {
         if (!commentRepository.existsById(id)) {
-            throw new RuntimeException("评论不存在");
+            throw new BusinessException("评论不存在");
         }
         commentRepository.deleteById(id);
     }

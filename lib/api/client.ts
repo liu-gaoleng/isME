@@ -27,13 +27,18 @@ class ApiError extends Error {
 
 async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
-    // 鉴权失效：清除本地登录态并跳转登录页（仅浏览器端）
-    if ((response.status === 401 || response.status === 403) && typeof window !== 'undefined') {
-      const onAdmin = window.location.pathname.startsWith('/admin');
-      if (onAdmin) {
+    // 401 = token 失效/未登录：仅当本地有 token 时才视为"登录失效"，
+    // 清除登录态并跳转登录页；否则只抛错，避免在 /login 页造成跳转循环。
+    // 403 = 已登录但权限不足：不清登录态、不跳转，由调用方处理。
+    if (response.status === 401 && typeof window !== 'undefined') {
+      const hasToken = !!localStorage.getItem('accessToken');
+      const onLogin = window.location.pathname.startsWith('/login');
+      if (hasToken && !onLogin) {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('authUser');
-        const redirect = encodeURIComponent(window.location.pathname);
+        const redirect = encodeURIComponent(
+          window.location.pathname + window.location.search
+        );
         window.location.href = `/login?redirect=${redirect}`;
       }
     }

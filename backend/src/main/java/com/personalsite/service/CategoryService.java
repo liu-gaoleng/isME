@@ -2,6 +2,7 @@ package com.personalsite.service;
 
 import com.personalsite.dto.CategoryDTO;
 import com.personalsite.entity.Category;
+import com.personalsite.exception.BusinessException;
 import com.personalsite.repository.CategoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -22,20 +23,20 @@ public class CategoryService {
     
     public CategoryDTO getCategoryById(Long id) {
         Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("分类不存在"));
+                .orElseThrow(() -> new BusinessException("分类不存在"));
         return toDTO(category);
     }
     
     public CategoryDTO getCategoryBySlug(String slug) {
         Category category = categoryRepository.findBySlug(slug)
-                .orElseThrow(() -> new RuntimeException("分类不存在"));
+                .orElseThrow(() -> new BusinessException("分类不存在"));
         return toDTO(category);
     }
     
     @Transactional
     public CategoryDTO createCategory(CategoryDTO categoryDTO) {
         if (categoryRepository.existsByName(categoryDTO.getName())) {
-            throw new RuntimeException("分类名称已存在");
+            throw new BusinessException("分类名称已存在");
         }
         
         Category category = new Category();
@@ -50,7 +51,7 @@ public class CategoryService {
     @Transactional
     public CategoryDTO updateCategory(Long id, CategoryDTO categoryDTO) {
         Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("分类不存在"));
+                .orElseThrow(() -> new BusinessException("分类不存在"));
         
         if (categoryDTO.getName() != null) {
             category.setName(categoryDTO.getName());
@@ -68,7 +69,7 @@ public class CategoryService {
     @Transactional
     public void deleteCategory(Long id) {
         if (!categoryRepository.existsById(id)) {
-            throw new RuntimeException("分类不存在");
+            throw new BusinessException("分类不存在");
         }
         categoryRepository.deleteById(id);
     }

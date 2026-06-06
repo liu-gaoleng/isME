@@ -3,6 +3,7 @@ package com.personalsite.controller;
 import com.personalsite.dto.ApiResponse;
 import com.personalsite.dto.CategoryDTO;
 import com.personalsite.service.CategoryService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -29,12 +30,12 @@ public class CategoryController {
     }
     
     @PostMapping
-    public ApiResponse<CategoryDTO> createCategory(@RequestBody CategoryDTO categoryDTO) {
+    public ApiResponse<CategoryDTO> createCategory(@Valid @RequestBody CategoryDTO categoryDTO) {
         return ApiResponse.success("分类创建成功", categoryService.createCategory(categoryDTO));
     }
     
     @PutMapping("/{id}")
-    public ApiResponse<CategoryDTO> updateCategory(@PathVariable Long id, @RequestBody CategoryDTO categoryDTO) {
+    public ApiResponse<CategoryDTO> updateCategory(@PathVariable Long id, @Valid @RequestBody CategoryDTO categoryDTO) {
         return ApiResponse.success("分类更新成功", categoryService.updateCategory(id, categoryDTO));
     }
     
