@@ -44,6 +44,8 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:?请在 .env 中配置 DB_PASSWORD}
       JWT_SECRET: ${JWT_SECRET:?请在 .env 中配置一个 32+ 字符的强随机 JWT_SECRET}
       APP_CORS_ALLOWED_ORIGINS: ${APP_CORS_ALLOWED_ORIGINS:-https://liuxxs.com,https://www.liuxxs.com}
+      # 生产走 HTTPS：鉴权 Cookie 必须带 Secure 标志
+      COOKIE_SECURE: "true"
       # 上传文件存储到容器内 /app/uploads，并通过下方 named volume 持久化
       APP_UPLOAD_DIR: /app/uploads
     volumes:

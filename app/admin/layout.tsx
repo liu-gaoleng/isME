@@ -5,7 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { isAuthenticated, removeAuthToken } from '@/lib/api/auth';
+import { getMe, logout } from '@/lib/api/auth';
 
 // 后台子模块导航：单独一个数组方便后续增减模块
 const ADMIN_NAV = [
@@ -26,17 +26,36 @@ export default function AdminLayout({
   const [authorized, setAuthorized] = useState(false);
 
   useEffect(() => {
-    if (!isAuthenticated()) {
-      router.replace(`/login?redirect=${encodeURIComponent(pathname)}`);
-      return;
-    }
-    setAuthorized(true);
+    let cancelled = false;
+    // 鉴权凭证为 HttpOnly Cookie，前端无法直接读取，
+    // 改为调用 /api/auth/me 由后端校验登录态，并在前端再校验 ADMIN 角色。
+    (async () => {
+      try {
+        const me = await getMe();
+        if (cancelled) return;
+        if (me.role !== 'ADMIN') {
+          // 已登录但非管理员：无权进入后台
+          router.replace('/login');
+          return;
+        }
+        setAuthorized(true);
+      } catch {
+        if (cancelled) return;
+        // 未登录或 token 失效（client 已对 401 自动跳转，这里兜底）
+        router.replace(`/login?redirect=${encodeURIComponent(pathname)}`);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [router, pathname]);
 
-  function handleLogout() {
-    removeAuthToken();
-    localStorage.removeItem('authUser');
-    router.replace('/login');
+  async function handleLogout() {
+    try {
+      await logout();
+    } finally {
+      router.replace('/login');
+    }
   }
 
   // 未通过鉴权前不渲染后台内容，避免敏感界面闪现

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { get, post, put, del } from '@/lib/api/client';
 import { API_ENDPOINTS } from '@/lib/api/config';
+import { getMe } from '@/lib/api/auth';
 import { Loading, ErrorMessage } from '@/components/Loading';
 
 interface User {
@@ -48,15 +49,13 @@ export default function AdminUsers() {
   const [resetError, setResetError] = useState<string | null>(null);
 
   useEffect(() => {
-    // 读取当前登录账号，避免误把自己禁用/降权/删除
-    if (typeof window !== 'undefined') {
-      try {
-        const raw = localStorage.getItem('authUser');
-        if (raw) setMe(JSON.parse(raw));
-      } catch {
-        /* ignore */
-      }
-    }
+    // 读取当前登录账号，避免误把自己禁用/降权/删除。
+    // 凭证为 HttpOnly Cookie，改为调用 /api/auth/me 获取当前用户。
+    getMe()
+      .then((u) => setMe({ id: u.id, username: u.username }))
+      .catch(() => {
+        /* 未登录由布局守卫处理，这里忽略 */
+      });
     loadUsers();
   }, []);
 

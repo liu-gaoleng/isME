@@ -3,6 +3,8 @@ export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost
 export const API_ENDPOINTS = {
   // 认证接口
   login: `${API_BASE_URL}/api/auth/login`,
+  logout: `${API_BASE_URL}/api/auth/logout`,
+  me: `${API_BASE_URL}/api/auth/me`,
   register: `${API_BASE_URL}/api/auth/register`,
   
   // 公开接口

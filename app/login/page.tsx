@@ -3,7 +3,6 @@
 import { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { login } from '@/lib/api/auth';
-import { setAuthToken } from '@/lib/api/auth';
 import { ErrorMessage } from '@/components/Loading';
 
 function LoginForm() {
@@ -26,10 +25,8 @@ function LoginForm() {
     setSubmitting(true);
     setError(null);
     try {
-      const res = await login({ email, password });
-      setAuthToken(res.accessToken);
-      // 存储当前用户信息，供后台鉴权守卫判断角色
-      localStorage.setItem('authUser', JSON.stringify(res.user));
+      // 登录成功后 JWT 已由后端写入 HttpOnly Cookie，前端无需保存 token。
+      await login({ email, password });
       router.replace(redirect);
     } catch (err) {
       setError(err instanceof Error ? err.message : '登录失败');

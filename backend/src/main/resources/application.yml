@@ -52,6 +52,11 @@ app:
   cors:
     # 允许跨域访问的前端来源，逗号分隔。生产用 APP_CORS_ALLOWED_ORIGINS 注入真实域名。
     allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:3000}
+  # 鉴权 Cookie 配置：JWT 存于 HttpOnly Cookie。
+  # secure 本地为 false（HTTP），生产走 HTTPS 须通过 COOKIE_SECURE=true 覆盖。
+  cookie:
+    secure: ${COOKIE_SECURE:false}
+    same-site: ${COOKIE_SAME_SITE:Lax}
   # 启动时自动创建的初始管理员账户。生产环境必须通过环境变量覆盖以下三项。
   admin:
     username: ${ADMIN_USERNAME:admin}

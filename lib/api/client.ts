@@ -27,15 +27,12 @@ class ApiError extends Error {
 
 async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
-    // 401 = token 失效/未登录：仅当本地有 token 时才视为"登录失效"，
-    // 清除登录态并跳转登录页；否则只抛错，避免在 /login 页造成跳转循环。
-    // 403 = 已登录但权限不足：不清登录态、不跳转，由调用方处理。
+    // 401 = token 失效/未登录：仅当不在 /login 页时跳转登录，避免循环。
+    // 鉴权凭证已改为 HttpOnly Cookie，前端无法读取，故不再依赖 localStorage 判断。
+    // 403 = 已登录但权限不足：不跳转，由调用方处理。
     if (response.status === 401 && typeof window !== 'undefined') {
-      const hasToken = !!localStorage.getItem('accessToken');
       const onLogin = window.location.pathname.startsWith('/login');
-      if (hasToken && !onLogin) {
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('authUser');
+      if (!onLogin) {
         const redirect = encodeURIComponent(
           window.location.pathname + window.location.search
         );
@@ -63,22 +60,34 @@ async function handleResponse<T>(response: Response): Promise<T> {
   return result.data;
 }
 
-function getAuthHeaders(): Headers {
+// 从 cookie 中读取 CSRF 令牌（Spring 下发的非 HttpOnly 的 XSRF-TOKEN）。
+function getCsrfToken(): string | null {
+  if (typeof document === 'undefined') return null;
+  const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]+)/);
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+// 构造请求头：JSON 内容类型 + 写请求所需的 CSRF 令牌头。
+// 鉴权 JWT 由 HttpOnly Cookie 自动携带（credentials: 'include'），无需手动加 Authorization。
+function buildHeaders(withCsrf: boolean): Headers {
   const headers = new Headers();
   headers.set('Content-Type', 'application/json');
-  
-  const token = localStorage.getItem('accessToken');
-  if (token) {
-    headers.set('Authorization', `Bearer ${token}`);
+
+  if (withCsrf) {
+    const csrf = getCsrfToken();
+    if (csrf) {
+      headers.set('X-XSRF-TOKEN', csrf);
+    }
   }
-  
+
   return headers;
 }
 
 export async function get<T>(url: string): Promise<T> {
   const response = await fetch(url, {
     method: 'GET',
-    headers: getAuthHeaders(),
+    headers: buildHeaders(false),
+    credentials: 'include',
   });
 
   return handleResponse<T>(response);
@@ -87,7 +96,8 @@ export async function get<T>(url: string): Promise<T> {
 export async function post<T>(url: string, data?: unknown): Promise<T> {
   const response = await fetch(url, {
     method: 'POST',
-    headers: getAuthHeaders(),
+    headers: buildHeaders(true),
+    credentials: 'include',
     body: data ? JSON.stringify(data) : undefined,
   });
 
@@ -97,7 +107,8 @@ export async function post<T>(url: string, data?: unknown): Promise<T> {
 export async function put<T>(url: string, data?: unknown): Promise<T> {
   const response = await fetch(url, {
     method: 'PUT',
-    headers: getAuthHeaders(),
+    headers: buildHeaders(true),
+    credentials: 'include',
     body: data ? JSON.stringify(data) : undefined,
   });
 
@@ -107,26 +118,29 @@ export async function put<T>(url: string, data?: unknown): Promise<T> {
 export async function del<T>(url: string): Promise<T> {
   const response = await fetch(url, {
     method: 'DELETE',
-    headers: getAuthHeaders(),
+    headers: buildHeaders(true),
+    credentials: 'include',
   });
 
   return handleResponse<T>(response);
 }
 
 // 文件上传：用 FormData 提交，不能手动设置 Content-Type（需让浏览器自动带 multipart boundary）。
+// 仍需携带 CSRF 令牌头与 Cookie 凭证。
 export async function upload<T>(url: string, file: File): Promise<T> {
   const formData = new FormData();
   formData.append('file', file);
 
   const headers = new Headers();
-  const token = localStorage.getItem('accessToken');
-  if (token) {
-    headers.set('Authorization', `Bearer ${token}`);
+  const csrf = getCsrfToken();
+  if (csrf) {
+    headers.set('X-XSRF-TOKEN', csrf);
   }
 
   const response = await fetch(url, {
     method: 'POST',
     headers,
+    credentials: 'include',
     body: formData,
   });
 

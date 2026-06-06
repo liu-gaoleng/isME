@@ -1,4 +1,4 @@
-import { post } from './client';
+import { post, get } from './client';
 import { API_ENDPOINTS } from './config';
 
 export interface LoginRequest {
@@ -19,10 +19,8 @@ export interface UserDTO {
   role: string;
 }
 
+// 登录响应：JWT 已通过 HttpOnly Cookie 下发，响应体仅含当前用户信息。
 export interface LoginResponse {
-  accessToken: string;
-  tokenType: string;
-  expiresIn: number;
   user: UserDTO;
 }
 
@@ -34,18 +32,12 @@ export async function register(request: RegisterRequest): Promise<UserDTO> {
   return post<UserDTO>(API_ENDPOINTS.register, request);
 }
 
-export function setAuthToken(token: string): void {
-  localStorage.setItem('accessToken', token);
+// 退出登录：由后端清除 HttpOnly Cookie。
+export async function logout(): Promise<void> {
+  await post<void>(API_ENDPOINTS.logout);
 }
 
-export function getAuthToken(): string | null {
-  return localStorage.getItem('accessToken');
-}
-
-export function removeAuthToken(): void {
-  localStorage.removeItem('accessToken');
-}
-
-export function isAuthenticated(): boolean {
-  return getAuthToken() !== null;
+// 获取当前登录用户。未登录时后端返回 401，client 会抛出 ApiError。
+export async function getMe(): Promise<UserDTO> {
+  return get<UserDTO>(API_ENDPOINTS.me);
 }
