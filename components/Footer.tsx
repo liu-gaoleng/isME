@@ -54,6 +54,18 @@ export default function Footer() {
             </div>
           </div>
         </div>
+
+        {/* 底部备案号：链接至工信部官网（ICP 备案合规要求） */}
+        <div className="mt-12 md:mt-16 pt-6 border-t border-white/10 text-center">
+          <a
+            href="https://beian.miit.gov.cn/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[11px] md:text-xs tracking-wider text-white/40 hover:text-white/70 transition-colors"
+          >
+            京ICP备2026032603号-1
+          </a>
+        </div>
       </div>
     </footer>
   );
