@@ -55,8 +55,8 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* 底部备案号：链接至工信部官网（ICP 备案合规要求） */}
-        <div className="mt-12 md:mt-16 pt-6 border-t border-white/10 text-center">
+        {/* 底部备案号：ICP 链接工信部官网，公安备案链接全国互联网安全管理服务平台 */}
+        <div className="mt-12 md:mt-16 pt-6 border-t border-white/10 text-center flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-4">
           <a
             href="https://beian.miit.gov.cn/"
             target="_blank"
@@ -64,6 +64,15 @@ export default function Footer() {
             className="text-[11px] md:text-xs tracking-wider text-white/40 hover:text-white/70 transition-colors"
           >
             京ICP备2026032603号-1
+          </a>
+          <a
+            href="https://beian.mps.gov.cn/#/query/webSearch?code=11010802048825"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-[11px] md:text-xs tracking-wider text-white/40 hover:text-white/70 transition-colors"
+          >
+            <img src="/beian-police.png" alt="公安备案图标" className="h-3.5 w-3.5" />
+            京公网安备11010802048825号
           </a>
         </div>
       </div>
