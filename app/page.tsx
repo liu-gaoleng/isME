@@ -119,7 +119,7 @@ export default function Home() {
               I&apos;m <span className="italic font-light">LiuWenhao</span>.
             </h1>
             <p className="max-w-xl text-base md:text-lg text-white/70 leading-relaxed mb-6 reveal reveal-delay-1">
-              灵感本易逝，行动应当是。
+              灵感本易逝，行动应当时。
             </p>
             <p className="max-w-2xl text-sm md:text-base text-white/55 leading-[1.9] reveal reveal-delay-2">
               一个疯子，<span className="text-white/80">写代码，也写文字</span>，
