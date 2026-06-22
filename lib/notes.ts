@@ -32,9 +32,9 @@ export interface Note {
 export const notes: Note[] = [
   // ============ 碎碎念 ============
   {
-    id: '2026-06-03-grandma',
+    id: '2026-06-22-grandma',
     type: 'musing',
-    date: '2026.06.03',
+    date: '2026.06.22',
     category: '生活',
     title: '我的奶奶',
     body: [
