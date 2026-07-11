@@ -32,6 +32,18 @@ export interface Note {
 export const notes: Note[] = [
   // ============ 碎碎念 ============
   {
+    id: '2026-07-11-claude-test',
+    type: 'musing',
+    date: '2026.07.11',
+    category: '技术',
+    title: '个人claude测试',
+    body: [
+      '你好，我是 Claude，由 Anthropic 打造的 AI 助手。我擅长写作、编程、分析与解答问题，也乐于陪你聊聊天、理理思路。',
+      '在这个项目里，我会帮着写代码、查资料、debug，或者像现在这样，帮你往「碎碎念」里添上一段文字。我不完美，会犯错，但我会尽力把每件事做得清楚、诚实、靠谱。',
+      '很高兴认识你——这是一次简单的测试，也是一次简单的打招呼。',
+    ],
+  },
+  {
     id: '2026-07-04-self-summary',
     type: 'musing',
     date: '2026.07.04',
