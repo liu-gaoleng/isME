@@ -89,6 +89,12 @@ public class SecurityConfig {
                     "/api/articles/**", "/api/categories/**",
                     "/api/comments/**", "/api/public/**").permitAll()
 
+                // ---- 公开只读：「me」个人模块（画板 / 小确幸 / 每日一问）----
+                // 仅 GET 公开展示；新增/修改/删除仍走下方 anyRequest().hasRole("ADMIN")
+                .requestMatchers(HttpMethod.GET,
+                    "/api/boards/**", "/api/happy-moments/**",
+                    "/api/daily-question/**").permitAll()
+
                 // ---- 公开写：访客行为（浏览计数 / 提交评论）----
                 .requestMatchers(HttpMethod.POST, "/api/articles/*/view").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/comments").permitAll()

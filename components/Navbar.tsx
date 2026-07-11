@@ -49,6 +49,13 @@ export default function Navbar({ transparent = false }: NavbarProps) {
     { href: '/about', label: '经历' },
   ];
 
+  // 「me」个人模块下拉：画板 / 小确幸 / 每日一问
+  const meLinks = [
+    { href: '/me/boards', label: '画板' },
+    { href: '/me/joy', label: '小确幸' },
+    { href: '/me/daily', label: '每日一问' },
+  ];
+
   return (
     <nav
       className={`fixed top-0 left-0 right-0 z-50 transition-[background,border,box-shadow,opacity,transform] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${
@@ -81,6 +88,30 @@ export default function Navbar({ transparent = false }: NavbarProps) {
                 <span className="control-pill__label">{link.label}</span>
               </Link>
             ))}
+
+            {/* 「me」下拉：悬停展开画板 / 小确幸 / 每日一问 */}
+            <div className="relative group">
+              <Link href="/me" className="control-pill">
+                <span aria-hidden className="control-pill__glow" />
+                <span aria-hidden className="control-pill__shine" />
+                <span aria-hidden className="control-pill__ring" />
+                <span className="control-pill__label">me ▾</span>
+              </Link>
+              {/* pt-2 作为悬停桥，避免指针移到菜单时下拉消失 */}
+              <div className="absolute right-0 top-full pt-3 opacity-0 invisible translate-y-1 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-300">
+                <div className="min-w-[168px] rounded-2xl bg-black/90 backdrop-blur-2xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.45)] p-1.5 flex flex-col">
+                  {meLinks.map((link) => (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      className="px-4 py-2.5 rounded-xl text-sm text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+                    >
+                      {link.label}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* 移动端菜单按钮 */}
@@ -126,6 +157,27 @@ export default function Navbar({ transparent = false }: NavbarProps) {
               {link.label}
             </Link>
           ))}
+
+          {/* me 分组：标题 + 缩进的三个子项 */}
+          <Link
+            href="/me"
+            onClick={() => setMenuOpen(false)}
+            className="text-white/85 text-base tracking-wider uppercase hover:text-white"
+          >
+            me
+          </Link>
+          <div className="flex flex-col gap-4 pl-4 border-l border-white/15">
+            {meLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setMenuOpen(false)}
+                className="text-white/65 text-sm tracking-wider hover:text-white"
+              >
+                {link.label}
+              </Link>
+            ))}
+          </div>
         </div>
       </div>
     </nav>

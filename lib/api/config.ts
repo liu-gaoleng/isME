@@ -19,6 +19,11 @@ export const API_ENDPOINTS = {
 
   // 文件上传
   uploadImage: `${API_BASE_URL}/api/upload/image`,
+
+  // 「me」个人模块：画板 / 小确幸 / 每日一问
+  boards: `${API_BASE_URL}/api/boards`,
+  happyMoments: `${API_BASE_URL}/api/happy-moments`,
+  dailyQuestion: `${API_BASE_URL}/api/daily-question`,
 };
 
 export default API_BASE_URL;
