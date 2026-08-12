@@ -4,6 +4,12 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useScrollReveal } from '@/lib/useScrollReveal';
 
+interface ProductImage {
+  src: string;      // 图片路径，放在 public/product/ 下，如 /product/app-home.png
+  alt: string;      // 图片说明（无障碍 + 加载失败时的替代文本）
+  caption?: string; // 图片下方的小字注释，可不填
+}
+
 interface Product {
   id: string;
   title: string;
@@ -15,9 +21,37 @@ interface Product {
   highlights: string[];
   tech: string[];
   repo?: string;
+  images?: ProductImage[];
 }
 
 const products: Product[] = [
+  {
+    id: 'redu',
+    title: '热读',
+    en: 'Hot Read',
+    status: '开发中',
+    period: '2026',
+    summary: '为投资人、产品经理、创业者、互联网从业者打造的一款 App——每天十分钟，了解世界上的宏观、金融、科技、AI 热点。',
+    narrative: [
+      '在这个信息量爆炸的时代，信息流占用了人们太多宝贵的精力，有价值的信息显得越发重要——通过较少的时间获取到真正有用的信息，是必要的。',
+      '核心功能主要包括每日热点及四个模块热点（科技 / 金融 / AI / 宏观），同时包含收藏、观看历史、查看热点来龙去脉等功能。',
+      '一开始本想做成所有人都可使用的一款 App，因此打算设计热点评论以及社区互动模块；但了解到我国对于热点汇集类 App 有限制，个人实体很难上线应用，因此便取消了。后续考虑上架国外的 App Store，目前仅个人使用。',
+    ],
+    highlights: [
+      '热点呈现',
+      '来龙去脉总结',
+      '主题聚焦',
+    ],
+    tech: ['Swift', 'SwiftUI', 'Python', 'DeepSeek API'],
+    images: [
+      { src: '/product/app-today.jpg', alt: '热读今日热榜页面', caption: '今日热榜' },
+      { src: '/product/app-channel.jpg', alt: '热读频道页面', caption: '频道热榜' },
+      { src: '/product/app-detail.jpg', alt: '热读热点详情页面', caption: '热点详情' },
+      { src: '/product/app-insight.jpg', alt: '热读 AI 热点透视页面', caption: 'AI 热点透视' },
+      { src: '/product/app-profile.jpg', alt: '热读我的页面', caption: '我的' },
+      { src: '/product/app-login.jpg', alt: '热读登录页面', caption: '登录页' },
+    ],
+  },
   {
     id: 'realtime-dwh',
     title: '电商实时数据仓库',
@@ -129,6 +163,34 @@ export default function ProductsPage() {
                       <p key={i}>{para}</p>
                     ))}
                   </div>
+
+                  {/* 截图画廊：images 非空时展示，竖屏截图按 2/3/4 列自适应排列 */}
+                  {product.images && product.images.length > 0 && (
+                    <div className="mt-10 max-w-4xl">
+                      <div className="text-xs tracking-[0.35em] uppercase text-white/40 mb-4">
+                        Screenshots
+                      </div>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
+                        {product.images.map((img) => (
+                          <figure key={img.src} className="group/img">
+                            <div className="overflow-hidden rounded-2xl border border-white/12 bg-white/[0.03] transition-colors duration-300 group-hover/img:border-white/30">
+                              <img
+                                src={img.src}
+                                alt={img.alt}
+                                loading="lazy"
+                                className="w-full h-full object-cover transition-transform duration-500 group-hover/img:scale-[1.03]"
+                              />
+                            </div>
+                            {img.caption && (
+                              <figcaption className="mt-2 text-center text-xs tracking-wider text-white/45">
+                                {img.caption}
+                              </figcaption>
+                            )}
+                          </figure>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   {/* 亮点 */}
                   <div className="mt-10 rounded-2xl border border-white/10 bg-black/30 p-6 sm:p-8 max-w-3xl">
