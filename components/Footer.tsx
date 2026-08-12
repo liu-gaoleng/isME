@@ -84,8 +84,40 @@ export default function Footer() {
               </span>
             </div>
             {stats && (
-              <div className="text-[10px] md:text-[11px] tracking-[0.3em] text-white/45 tabular-nums">
-                {stats.totalVisitors} 位访客 · {stats.totalVisits} 次访问
+              <div className="flex items-center gap-4 text-[11px] md:text-xs tracking-[0.15em] text-white/45 tabular-nums">
+                {/* 独立访客数（UV） */}
+                <span className="flex items-center gap-1.5" title="访客数">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="w-3.5 h-3.5"
+                    aria-hidden
+                  >
+                    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                  </svg>
+                  {stats.totalVisitors}
+                </span>
+                {/* 累计访问次数（PV） */}
+                <span className="flex items-center gap-1.5" title="访问次数">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="w-3.5 h-3.5"
+                    aria-hidden
+                  >
+                    <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" />
+                  </svg>
+                  {stats.totalVisits}
+                </span>
               </div>
             )}
           </div>
