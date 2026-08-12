@@ -15,7 +15,7 @@ COPY backend/src ./src
 # 而该包在镜像源上常缺失/502，且项目实际用不到，会导致构建失败。
 RUN mvn package -DskipTests -B
 
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:17-jre
 
 WORKDIR /app
 
