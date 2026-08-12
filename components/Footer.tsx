@@ -1,14 +1,37 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { API_ENDPOINTS } from '@/lib/api/config';
+import { post } from '@/lib/api/client';
+
+interface VisitStats {
+  totalVisits: number;
+  totalVisitors: number;
+}
+
+const VISITOR_ID_KEY = 'isme_visitor_id';
+
+/**
+ * 每个浏览器一个持久访客标识（UV 去重依据）：
+ * 首次访问生成 UUID 存入 localStorage，之后一直沿用。
+ */
+function getOrCreateVisitorId(): string {
+  let id = localStorage.getItem(VISITOR_ID_KEY);
+  if (!id) {
+    id = crypto.randomUUID();
+    localStorage.setItem(VISITOR_ID_KEY, id);
+  }
+  return id;
+}
 
 /**
  * 页面尾声：作为正常页面的最后一段（不是固定浮层），
  * - 左下：放大的 "This is me"
- * - 右下：实时心跳计时器（与鼠标颜色一致的绿色脉冲）
+ * - 右下：实时心跳计时器（与鼠标颜色一致的绿色脉冲）+ 访问统计
  */
 export default function Footer() {
   const [time, setTime] = useState('');
+  const [stats, setStats] = useState<VisitStats | null>(null);
 
   useEffect(() => {
     const update = () => {
@@ -21,6 +44,17 @@ export default function Footer() {
     update();
     const id = setInterval(update, 1000);
     return () => clearInterval(id);
+  }, []);
+
+  // 每次页面加载上报一次访问（PV +1），并取回最新统计（PV / UV）
+  useEffect(() => {
+    post<VisitStats>(`${API_ENDPOINTS.stats}/visit`, {
+      visitorId: getOrCreateVisitorId(),
+    })
+      .then(setStats)
+      .catch(() => {
+        // 统计失败不影响页面展示
+      });
   }, []);
 
   return (
@@ -38,11 +72,8 @@ export default function Footer() {
             </h2>
           </div>
 
-          {/* 右下：实时心跳计时器 */}
+          {/* 右下：实时心跳计时器 + 访问统计 */}
           <div className="flex flex-col items-start md:items-end gap-3 md:gap-4 select-none">
-            <div className="text-[10px] md:text-[11px] tracking-[0.45em] uppercase text-white/45">
-              Beating · Still Coding
-            </div>
             <div className="flex items-center gap-3 md:gap-4">
               <span className="relative inline-flex w-2.5 h-2.5">
                 <span className="absolute inset-0 rounded-full bg-[var(--cursor-green,#22e07a)] animate-ping opacity-70" />
@@ -52,6 +83,11 @@ export default function Footer() {
                 {time}
               </span>
             </div>
+            {stats && (
+              <div className="text-[10px] md:text-[11px] tracking-[0.3em] text-white/45 tabular-nums">
+                {stats.totalVisitors} 位访客 · {stats.totalVisits} 次访问
+              </div>
+            )}
           </div>
         </div>
 

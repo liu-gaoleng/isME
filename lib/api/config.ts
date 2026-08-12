@@ -24,6 +24,9 @@ export const API_ENDPOINTS = {
   boards: `${API_BASE_URL}/api/boards`,
   happyMoments: `${API_BASE_URL}/api/happy-moments`,
   dailyQuestion: `${API_BASE_URL}/api/daily-question`,
+
+  // 站点访问统计（UV 按访客标识去重，PV 每次加载 +1）
+  stats: `${API_BASE_URL}/api/stats`,
 };
 
 export default API_BASE_URL;

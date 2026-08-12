@@ -58,12 +58,13 @@ public class SecurityConfig {
             .csrf(csrf -> csrf
                 .csrfTokenRepository(csrfTokenRepository)
                 .csrfTokenRequestHandler(csrfRequestHandler)
-                // 以下接口免 CSRF：登录/登出（登录态变更入口）、访客浏览计数与匿名评论
+                // 以下接口免 CSRF：登录/登出（登录态变更入口）、访客浏览计数与匿名评论、访问统计上报
                 .ignoringRequestMatchers(
                     "/api/auth/login",
                     "/api/auth/logout",
                     "/api/comments",
-                    "/api/articles/*/view"
+                    "/api/articles/*/view",
+                    "/api/stats/visit"
                 )
             )
             // CORS 配置统一由 CorsConfig 提供的 corsConfigurationSource Bean 接管
@@ -87,7 +88,7 @@ public class SecurityConfig {
                 // ---- 公开只读：博客内容 ----
                 .requestMatchers(HttpMethod.GET,
                     "/api/articles/**", "/api/categories/**",
-                    "/api/comments/**", "/api/public/**").permitAll()
+                    "/api/comments/**", "/api/public/**", "/api/stats").permitAll()
 
                 // ---- 公开只读：「me」个人模块（画板 / 小确幸 / 每日一问）----
                 // 仅 GET 公开展示；新增/修改/删除仍走下方 anyRequest().hasRole("ADMIN")
@@ -95,9 +96,10 @@ public class SecurityConfig {
                     "/api/boards/**", "/api/happy-moments/**",
                     "/api/daily-question/**").permitAll()
 
-                // ---- 公开写：访客行为（浏览计数 / 提交评论）----
+                // ---- 公开写：访客行为（浏览计数 / 提交评论 / 访问统计上报）----
                 .requestMatchers(HttpMethod.POST, "/api/articles/*/view").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/comments").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/stats/visit").permitAll()
 
                 // ---- 其余一律需要管理员（默认拒绝原则）----
                 // 覆盖：文章/分类的增删改、评论审核与删除、用户管理等全部后台写操作
