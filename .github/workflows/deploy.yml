@@ -41,6 +41,10 @@ jobs:
           context: .
           file: backend/Dockerfile
           push: true
+          # 阿里云 ACR 不认 buildx 默认附带的 OCI attestation 清单
+          # （报 unknown manifest class ...oci.empty.v1+json），必须关掉
+          provenance: false
+          sbom: false
           tags: |
             ${{ env.IMAGE_BACKEND }}:latest
             ${{ env.IMAGE_BACKEND }}:${{ github.sha }}
@@ -53,6 +57,8 @@ jobs:
           context: .
           file: Dockerfile.frontend
           push: true
+          provenance: false
+          sbom: false
           build-args: |
             NEXT_PUBLIC_API_URL=${{ vars.PROD_API_URL || 'https://liuxxs.com' }}
           tags: |
