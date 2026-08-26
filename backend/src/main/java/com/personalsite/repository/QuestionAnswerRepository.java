@@ -2,6 +2,7 @@ package com.personalsite.repository;
 
 import com.personalsite.entity.QuestionAnswer;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import java.time.LocalDate;
 import java.util.List;
@@ -12,4 +13,7 @@ public interface QuestionAnswerRepository extends JpaRepository<QuestionAnswer, 
     Optional<QuestionAnswer> findByAnsweredOn(LocalDate answeredOn);
 
     List<QuestionAnswer> findAllByOrderByAnsweredOnDesc();
+
+    @Query("SELECT a.questionId FROM QuestionAnswer a")
+    List<Long> findAllQuestionIds();
 }
