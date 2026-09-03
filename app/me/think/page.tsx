@@ -30,18 +30,142 @@ function FeedbackContent({ markdown }: { markdown: string }) {
   );
 }
 
+/** 评判状态徽标 */
+function EvalBadge({ status }: { status: ThinkHistoryItem['evalStatus'] }) {
+  if (status === 'DONE') {
+    return <span className="text-xs px-2.5 py-0.5 rounded-full border border-emerald-400/40 text-emerald-300/90">已评判</span>;
+  }
+  if (status === 'EVALUATING') {
+    return <span className="text-xs px-2.5 py-0.5 rounded-full border border-white/25 text-white/60 animate-pulse">评判中…</span>;
+  }
+  if (status === 'FAILED') {
+    return <span className="text-xs px-2.5 py-0.5 rounded-full border border-red-400/40 text-red-300/90">评判失败</span>;
+  }
+  return null;
+}
+
+/**
+ * 某一道题的作答编辑块（当前期与往期补答共用）。
+ * 内部维护草稿、保存、提交与评判轮询。
+ */
+function AnswerEditor({
+  questionId,
+  initialHtml,
+  initialStatus,
+  initialFeedback,
+  onSaved,
+}: {
+  questionId: number;
+  initialHtml: string;
+  initialStatus: ThinkHistoryItem['evalStatus'];
+  initialFeedback: string | null;
+  /** 保存/提交/评判结束后回传最新单题数据，父组件用来同步列表 */
+  onSaved?: (item: ThinkHistoryItem) => void;
+}) {
+  const [draft, setDraft] = useState(initialHtml);
+  const [status, setStatus] = useState(initialStatus);
+  const [feedback, setFeedback] = useState(initialFeedback);
+  const [busy, setBusy] = useState<'save' | 'submit' | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // 评判中：每 3 秒轮询单题，直到 DONE / FAILED
+  useEffect(() => {
+    if (status !== 'EVALUATING') return;
+    pollRef.current = setInterval(async () => {
+      try {
+        const item = await thinkService.getQuestion(questionId);
+        if (item.evalStatus === 'DONE' || item.evalStatus === 'FAILED') {
+          setStatus(item.evalStatus);
+          setFeedback(item.aiFeedback);
+          onSaved?.(item);
+          if (pollRef.current) clearInterval(pollRef.current);
+        }
+      } catch {
+        // 轮询失败静默，下一段继续
+      }
+    }, 3000);
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status, questionId]);
+
+  async function handle(action: 'save' | 'submit') {
+    if (!draft.trim()) return;
+    setBusy(action);
+    setError(null);
+    try {
+      const item =
+        action === 'save'
+          ? await thinkService.saveAnswer(questionId, draft)
+          : await thinkService.submit(questionId, draft);
+      setStatus(item.evalStatus);
+      setFeedback(item.aiFeedback);
+      onSaved?.(item);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '操作失败，请重试');
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  return (
+    <div>
+      <ThinkEditor value={draft} onChange={setDraft} />
+      <div className="mt-5 flex items-center gap-4">
+        <button
+          onClick={() => handle('save')}
+          disabled={busy !== null || !draft.trim()}
+          className="px-6 py-2.5 rounded-full border border-white/25 text-white/80 text-sm hover:border-white/60 transition-colors disabled:opacity-40"
+        >
+          {busy === 'save' ? '保存中…' : '保存草稿'}
+        </button>
+        <button
+          onClick={() => handle('submit')}
+          disabled={busy !== null || !draft.trim() || status === 'EVALUATING'}
+          className="px-6 py-2.5 rounded-full bg-white text-black text-sm font-semibold disabled:opacity-40 hover:opacity-90 transition-opacity"
+        >
+          {busy === 'submit'
+            ? '提交中…'
+            : status === 'EVALUATING'
+              ? 'AI 评判中…'
+              : status === 'DONE' || status === 'FAILED'
+                ? '重新提交评判'
+                : '提交并 AI 评判'}
+        </button>
+      </div>
+      {error && <p className="mt-4 text-sm text-red-400/80">{error}</p>}
+
+      {status === 'EVALUATING' && (
+        <p className="mt-6 text-white/50 animate-pulse">
+          AI 正在阅读你的文档并评判中，通常需要 10~30 秒……
+        </p>
+      )}
+      {status === 'FAILED' && (
+        <p className="mt-6 text-red-400/80">评判失败，请重新提交一次试试。</p>
+      )}
+      {status === 'DONE' && feedback && (
+        <div className="mt-6 border border-white/10 bg-white/[0.02] rounded-xl p-7">
+          <p className="text-xs tracking-[0.3em] uppercase text-white/40 mb-5">AI 评判</p>
+          <FeedbackContent markdown={feedback} />
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function ThinkPage() {
   const { isAdmin } = useIsAdmin();
   const [current, setCurrent] = useState<ThinkCurrent | null>(null);
   const [history, setHistory] = useState<ThinkHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [draft, setDraft] = useState('');
-  const [saving, setSaving] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
+  /** 往期里展开了补答编辑器的题目 id */
+  const [answeringId, setAnsweringId] = useState<number | null>(null);
+  /** 往期里展开了只读详情（作答+评判）的题目 id */
   const [expanded, setExpanded] = useState<Record<number, boolean>>({});
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -51,12 +175,9 @@ export default function ThinkPage() {
       ]);
       setCurrent(c);
       setHistory(h);
-      setDraft((prev) => prev || c.answerHtml || '');
       setError(null);
-      return c;
     } catch (e) {
       setError(e instanceof Error ? e.message : '加载失败，请稍后再试。');
-      return null;
     } finally {
       setLoading(false);
     }
@@ -66,70 +187,22 @@ export default function ThinkPage() {
     load();
   }, [load]);
 
-  // 评判中：每 3 秒轮询，直到 DONE / FAILED
-  useEffect(() => {
-    if (current?.evalStatus !== 'EVALUATING') {
-      if (pollRef.current) clearInterval(pollRef.current);
-      pollRef.current = null;
-      return;
-    }
-    pollRef.current = setInterval(async () => {
-      try {
-        const c = await thinkService.getCurrent();
-        setCurrent(c);
-        if (c.evalStatus === 'DONE' || c.evalStatus === 'FAILED') {
-          if (pollRef.current) clearInterval(pollRef.current);
-          pollRef.current = null;
-        }
-      } catch {
-        // 轮询失败静默，下一段继续
-      }
-    }, 3000);
-    return () => {
-      if (pollRef.current) clearInterval(pollRef.current);
-      pollRef.current = null;
-    };
-  }, [current?.evalStatus]);
-
-  async function handleSave() {
-    if (!draft.trim()) return;
-    setSaving(true);
-    setError(null);
-    try {
-      setCurrent(await thinkService.saveAnswer(draft));
-    } catch (e) {
-      setError(e instanceof Error ? e.message : '保存失败');
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  async function handleSubmit() {
-    if (!draft.trim()) return;
-    setSubmitting(true);
-    setError(null);
-    try {
-      setCurrent(await thinkService.submit(draft));
-    } catch (e) {
-      setError(e instanceof Error ? e.message : '提交失败');
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
   async function handleRegenerate() {
     if (!confirm('换一道会清空本期的题目和已写的内容，确定吗？')) return;
     setRegenerating(true);
     setError(null);
     try {
-      const c = await thinkService.regenerate();
-      setCurrent(c);
-      setDraft('');
+      setCurrent(await thinkService.regenerate());
     } catch (e) {
       setError(e instanceof Error ? e.message : '出题失败');
     } finally {
       setRegenerating(false);
     }
+  }
+
+  /** 往期某题保存/提交后，同步该题数据进列表 */
+  function syncHistoryItem(item: ThinkHistoryItem) {
+    setHistory((prev) => prev.map((h) => (h.questionId === item.questionId ? item : h)));
   }
 
   const hasAnswer = !!current?.answerHtml;
@@ -163,8 +236,11 @@ export default function ThinkPage() {
               {/* 本期题目 */}
               <div className="border border-white/10 bg-white/[0.02] rounded-xl p-7">
                 <div className="flex items-center justify-between gap-4 mb-5">
-                  <span className="text-xs tracking-[0.25em] uppercase px-3 py-1 rounded-full border border-white/20 text-white/60">
-                    {current.category}
+                  <span className="flex items-center gap-3">
+                    <span className="text-xs tracking-[0.25em] uppercase px-3 py-1 rounded-full border border-white/20 text-white/60">
+                      {current.category}
+                    </span>
+                    <EvalBadge status={current.evalStatus} />
                   </span>
                   {isAdmin && current.aiAvailable && (
                     <button
@@ -187,63 +263,38 @@ export default function ThinkPage() {
                 </p>
               )}
 
-              {/* 作答区 */}
+              {/* 本期作答区 */}
               <section className="mt-12">
                 <h2 className="text-xs tracking-[0.35em] uppercase text-white/40 mb-6">
                   我的作答
                 </h2>
                 {isAdmin ? (
-                  <div>
-                    <ThinkEditor value={draft} onChange={setDraft} />
-                    <div className="mt-5 flex items-center gap-4">
-                      <button
-                        onClick={handleSave}
-                        disabled={saving || submitting || !draft.trim()}
-                        className="px-6 py-2.5 rounded-full border border-white/25 text-white/80 text-sm hover:border-white/60 transition-colors disabled:opacity-40"
-                      >
-                        {saving ? '保存中…' : '保存草稿'}
-                      </button>
-                      <button
-                        onClick={handleSubmit}
-                        disabled={saving || submitting || !draft.trim() || current.evalStatus === 'EVALUATING'}
-                        className="px-6 py-2.5 rounded-full bg-white text-black text-sm font-semibold disabled:opacity-40 hover:opacity-90 transition-opacity"
-                      >
-                        {submitting
-                          ? '提交中…'
-                          : current.evalStatus === 'EVALUATING'
-                            ? 'AI 评判中…'
-                            : '提交并 AI 评判'}
-                      </button>
-                    </div>
-                  </div>
+                  <AnswerEditor
+                    questionId={current.questionId}
+                    initialHtml={current.answerHtml ?? ''}
+                    initialStatus={current.evalStatus}
+                    initialFeedback={current.aiFeedback}
+                    onSaved={() => {
+                      // 当前期数据变化后整体刷新一次（状态/期号以服务端为准）
+                      thinkService.getCurrent().then(setCurrent).catch(() => {});
+                    }}
+                  />
                 ) : hasAnswer ? (
-                  <RichContent html={current.answerHtml!} />
+                  <>
+                    <RichContent html={current.answerHtml!} />
+                    {current.evalStatus === 'DONE' && current.aiFeedback && (
+                      <div className="mt-6 border border-white/10 bg-white/[0.02] rounded-xl p-7">
+                        <p className="text-xs tracking-[0.3em] uppercase text-white/40 mb-5">
+                          AI 评判
+                        </p>
+                        <FeedbackContent markdown={current.aiFeedback} />
+                      </div>
+                    )}
+                  </>
                 ) : (
                   <p className="text-white/40 italic">本期还没有作答。</p>
                 )}
               </section>
-
-              {/* AI 评判 */}
-              {(current.evalStatus !== 'NONE' || current.aiFeedback) && (
-                <section className="mt-12">
-                  <h2 className="text-xs tracking-[0.35em] uppercase text-white/40 mb-6">
-                    AI 评判
-                  </h2>
-                  {current.evalStatus === 'EVALUATING' ? (
-                    <p className="text-white/50 animate-pulse">
-                      AI 正在阅读你的文档并评判中，通常需要 10~30 秒……
-                    </p>
-                  ) : current.evalStatus === 'FAILED' ? (
-                    <p className="text-red-400/80">
-                      评判失败，请重新提交一次试试。
-                    </p>
-                  ) : current.aiFeedback ? (
-                    <div className="border border-white/10 bg-white/[0.02] rounded-xl p-7">
-                      <FeedbackContent markdown={current.aiFeedback} />
-                    </div>
-                  ) : null}
-                </section>
-              )}
 
               {error && <p className="mt-6 text-sm text-red-400/80">{error}</p>}
 
@@ -256,6 +307,7 @@ export default function ThinkPage() {
                   <ul className="relative border-l border-white/15 pl-8 space-y-14">
                     {history.map((item) => {
                       const open = !!expanded[item.questionId];
+                      const answering = answeringId === item.questionId;
                       return (
                         <li key={item.questionId} className="relative">
                           <span className="absolute -left-[37px] top-1.5 w-2.5 h-2.5 rounded-full bg-white/70" />
@@ -265,17 +317,56 @@ export default function ThinkPage() {
                           <p className="text-white/80 leading-[1.9] whitespace-pre-wrap mb-4">
                             {item.questionText}
                           </p>
-                          {item.answerHtml && (
-                            <button
-                              onClick={() =>
-                                setExpanded((s) => ({ ...s, [item.questionId]: !open }))
-                              }
-                              className="text-xs tracking-[0.25em] uppercase text-white/40 hover:text-white transition-colors"
-                            >
-                              {open ? '收起 ↑' : '查看作答与评判 ↓'}
-                            </button>
+
+                          <div className="flex items-center gap-5">
+                            <EvalBadge status={item.evalStatus} />
+                            {item.answerHtml && !answering && (
+                              <button
+                                onClick={() =>
+                                  setExpanded((s) => ({ ...s, [item.questionId]: !open }))
+                                }
+                                className="text-xs tracking-[0.25em] uppercase text-white/40 hover:text-white transition-colors"
+                              >
+                                {open ? '收起 ↑' : '查看作答' + (item.aiFeedback ? '与评判' : '') + ' ↓'}
+                              </button>
+                            )}
+                            {/* 管理员：未答的往期题可补答；已答的可继续修改 */}
+                            {isAdmin && !answering && (
+                              <button
+                                onClick={() => {
+                                  setAnsweringId(item.questionId);
+                                  setExpanded((s) => ({ ...s, [item.questionId]: false }));
+                                }}
+                                className="text-xs tracking-[0.25em] uppercase text-white/40 hover:text-white transition-colors"
+                              >
+                                {item.answerHtml ? '继续作答 →' : '补答这道题 →'}
+                              </button>
+                            )}
+                            {isAdmin && answering && (
+                              <button
+                                onClick={() => setAnsweringId(null)}
+                                className="text-xs tracking-[0.25em] uppercase text-white/40 hover:text-white transition-colors"
+                              >
+                                收起编辑器 ↑
+                              </button>
+                            )}
+                          </div>
+
+                          {/* 补答/修改编辑器 */}
+                          {answering && (
+                            <div className="mt-6">
+                              <AnswerEditor
+                                questionId={item.questionId}
+                                initialHtml={item.answerHtml ?? ''}
+                                initialStatus={item.evalStatus}
+                                initialFeedback={item.aiFeedback}
+                                onSaved={syncHistoryItem}
+                              />
+                            </div>
                           )}
-                          {open && item.answerHtml && (
+
+                          {/* 只读展开：作答 + 评判 */}
+                          {open && !answering && item.answerHtml && (
                             <div className="mt-6 space-y-8">
                               <RichContent html={item.answerHtml} />
                               {item.aiFeedback && (

@@ -29,9 +29,11 @@ export interface ThinkHistoryItem {
 export const thinkService = {
   getCurrent: () => get<ThinkCurrent>(`${API_ENDPOINTS.think}/current`),
   getHistory: () => get<ThinkHistoryItem[]>(`${API_ENDPOINTS.think}/history`),
-  saveAnswer: (answerHtml: string) =>
-    put<ThinkCurrent>(`${API_ENDPOINTS.think}/current/answer`, { answerHtml }),
-  submit: (answerHtml: string) =>
-    post<ThinkCurrent>(`${API_ENDPOINTS.think}/current/submit`, { answerHtml }),
+  getQuestion: (questionId: number) =>
+    get<ThinkHistoryItem>(`${API_ENDPOINTS.think}/questions/${questionId}`),
+  saveAnswer: (questionId: number, answerHtml: string) =>
+    put<ThinkHistoryItem>(`${API_ENDPOINTS.think}/questions/${questionId}/answer`, { answerHtml }),
+  submit: (questionId: number, answerHtml: string) =>
+    post<ThinkHistoryItem>(`${API_ENDPOINTS.think}/questions/${questionId}/submit`, { answerHtml }),
   regenerate: () => post<ThinkCurrent>(`${API_ENDPOINTS.think}/current/regenerate`, {}),
 };

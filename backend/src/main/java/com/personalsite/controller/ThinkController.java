@@ -13,6 +13,7 @@ import java.util.List;
 /**
  * 「思考一下」：每 3 天一期深度思考题 + AI 评判。
  * GET 公开；保存/提交/换题仅管理员（SecurityConfig 兜底规则）。
+ * 作答按 questionId 路由——当期可答，往期未答的题也允许补答。
  */
 @RestController
 @RequestMapping("/api/think")
@@ -20,7 +21,7 @@ import java.util.List;
 public class ThinkController {
     private final ThinkService thinkService;
 
-    /** 当前期题目 + 我的作答 + 评判状态（前端轮询评判结果也用此接口） */
+    /** 当前期题目 + 我的作答 + 评判状态（当前期的轮询也用此接口） */
     @GetMapping("/current")
     public ApiResponse<ThinkCurrentDTO> current() {
         return ApiResponse.success(thinkService.getCurrent());
@@ -32,16 +33,24 @@ public class ThinkController {
         return ApiResponse.success(thinkService.getHistory());
     }
 
-    /** 保存草稿（不触发评判） */
-    @PutMapping("/current/answer")
-    public ApiResponse<ThinkCurrentDTO> saveAnswer(@Valid @RequestBody ThinkAnswerRequest request) {
-        return ApiResponse.success(thinkService.saveAnswer(request.getAnswerHtml()));
+    /** 单题视图：题目 + 作答 + 评判（补答提交后的轮询用） */
+    @GetMapping("/questions/{questionId}")
+    public ApiResponse<ThinkHistoryItemDTO> getQuestion(@PathVariable Long questionId) {
+        return ApiResponse.success(thinkService.getQuestion(questionId));
     }
 
-    /** 提交作答并触发 AI 异步评判（随后轮询 /current 拿结果） */
-    @PostMapping("/current/submit")
-    public ApiResponse<ThinkCurrentDTO> submit(@Valid @RequestBody ThinkAnswerRequest request) {
-        return ApiResponse.success(thinkService.submitAnswer(request.getAnswerHtml()));
+    /** 保存草稿（不触发评判；当期/往期题均可） */
+    @PutMapping("/questions/{questionId}/answer")
+    public ApiResponse<ThinkHistoryItemDTO> saveAnswer(@PathVariable Long questionId,
+                                                       @Valid @RequestBody ThinkAnswerRequest request) {
+        return ApiResponse.success(thinkService.saveAnswer(questionId, request.getAnswerHtml()));
+    }
+
+    /** 提交作答并触发 AI 异步评判（当期/往期题均可，随后轮询 /questions/{id}） */
+    @PostMapping("/questions/{questionId}/submit")
+    public ApiResponse<ThinkHistoryItemDTO> submit(@PathVariable Long questionId,
+                                                   @Valid @RequestBody ThinkAnswerRequest request) {
+        return ApiResponse.success(thinkService.submitAnswer(questionId, request.getAnswerHtml()));
     }
 
     /** 换一道：重新生成当前期题目（会清空本期已有作答） */
