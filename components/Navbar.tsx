@@ -49,11 +49,12 @@ export default function Navbar({ transparent = false }: NavbarProps) {
     { href: '/about', label: '经历' },
   ];
 
-  // 「me」个人模块下拉：画板 / 小确幸 / 每日一问
+  // 「me」个人模块下拉：画板 / 小确幸 / 每日一问 / 思考一下
   const meLinks = [
     { href: '/me/boards', label: '画板' },
     { href: '/me/joy', label: '小确幸' },
     { href: '/me/daily', label: '每日一问' },
+    { href: '/me/think', label: '思考一下' },
   ];
 
   return (
