@@ -12,6 +12,10 @@ public class ThinkHistoryItemDTO {
     private Integer periodIndex;
     private String category;
     private String questionText;
+    /** 出题质检状态：PASSED / FAILED / SKIPPED */
+    private String reviewStatus;
+    /** 质检一句话结论 */
+    private String reviewNote;
     private LocalDate periodStart;
     private LocalDate periodEnd;
 

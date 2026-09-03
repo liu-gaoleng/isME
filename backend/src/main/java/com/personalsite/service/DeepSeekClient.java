@@ -84,6 +84,41 @@ public class DeepSeekClient {
     }
 
     /**
+     * 质检结果。
+     *
+     * @param passed 是否通过
+     * @param note   一句话理由
+     */
+    public record ReviewResult(boolean passed, String note) {
+    }
+
+    /**
+     * 质检一道已生成的题目：具体性 / 可写性 / 类别匹配 / 事实可信度。
+     * 用低温度、严格的输出格式，宁枉勿纵。
+     */
+    public ReviewResult reviewQuestion(String category, String questionText) {
+        String prompt = """
+                请严格质检下面这道「%s」类别的思考题，按清单逐项审查：
+                1. 具体性：是否指向一个具体的产品/事件/功能场景，而不是泛泛的主题或纯抽象问题？
+                2. 可写性：是否有足够的分析纵深，能支撑一篇 500 字以上的深度文档？
+                3. 类别匹配：内容是否符合「%s」的出题定位？
+                4. 事实可信度：题目中涉及的产品、事件、数据是否真实存在且基本准确？疑似编造、张冠李戴、把冷门说成爆火、虚构产品名或公司的，一律判 FAIL。
+
+                【题目】
+                %s
+
+                输出格式（严格遵守，不要输出任何其他内容）：
+                第一行只输出 PASS 或 FAIL 一个词；
+                第二行输出一句话理由（30字以内）。""";
+        String result = chat("你是一位苛刻的出题质量审查员，宁枉勿纵。",
+                prompt.formatted(category, category, questionText), 0.2);
+        String[] lines = result.split("\n", 2);
+        boolean passed = lines[0].trim().equalsIgnoreCase("PASS");
+        String note = lines.length > 1 ? lines[1].trim() : "";
+        return new ReviewResult(passed, note);
+    }
+
+    /**
      * 评判用户的作答文档。
      *
      * @return Markdown 格式的评判（总体评价/亮点/不足/建议/参考结论）

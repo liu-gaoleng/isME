@@ -25,6 +25,14 @@ public class ThinkQuestion {
     @Column(name = "question_text", nullable = false, columnDefinition = "TEXT")
     private String questionText;
 
+    /** 质检状态：PASSED / FAILED（多次重出仍未过，保留但标记）/ SKIPPED（质检调用失败未审查） */
+    @Column(name = "review_status", nullable = false, length = 16)
+    private String reviewStatus = "PASSED";
+
+    /** 质检一句话结论 */
+    @Column(name = "review_note", length = 500)
+    private String reviewNote;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

@@ -6,6 +6,8 @@ export interface ThinkCurrent {
   periodIndex: number;
   category: string;
   questionText: string;
+  reviewStatus: 'PASSED' | 'FAILED' | 'SKIPPED';
+  reviewNote: string | null;
   periodStart: string;
   periodEnd: string;
   aiAvailable: boolean;
@@ -19,6 +21,8 @@ export interface ThinkHistoryItem {
   periodIndex: number;
   category: string;
   questionText: string;
+  reviewStatus: 'PASSED' | 'FAILED' | 'SKIPPED';
+  reviewNote: string | null;
   periodStart: string;
   periodEnd: string;
   answerHtml: string | null;

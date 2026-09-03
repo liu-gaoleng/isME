@@ -12,6 +12,10 @@ public class ThinkCurrentDTO {
     private Integer periodIndex;
     private String category;
     private String questionText;
+    /** 出题质检状态：PASSED / FAILED / SKIPPED */
+    private String reviewStatus;
+    /** 质检一句话结论 */
+    private String reviewNote;
     /** 本期起止日期（每期 3 天） */
     private LocalDate periodStart;
     private LocalDate periodEnd;

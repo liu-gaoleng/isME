@@ -44,6 +44,29 @@ function EvalBadge({ status }: { status: ThinkHistoryItem['evalStatus'] }) {
   return null;
 }
 
+/** 出题质检状态徽标（仅管理员可见） */
+function ReviewBadge({ status, note }: { status: 'PASSED' | 'FAILED' | 'SKIPPED'; note: string | null }) {
+  if (status === 'PASSED') {
+    return (
+      <span title={note ?? 'AI 质检通过'} className="text-xs px-2.5 py-0.5 rounded-full border border-white/15 text-white/35">
+        质检✓
+      </span>
+    );
+  }
+  if (status === 'FAILED') {
+    return (
+      <span title={note ?? '多次重出仍未通过质检，题目质量可能欠佳'} className="text-xs px-2.5 py-0.5 rounded-full border border-amber-400/40 text-amber-300/90">
+        质检存疑
+      </span>
+    );
+  }
+  return (
+    <span title="质检服务当时不可用，题目未经审查" className="text-xs px-2.5 py-0.5 rounded-full border border-white/15 text-white/35">
+      未质检
+    </span>
+  );
+}
+
 /**
  * 某一道题的作答编辑块（当前期与往期补答共用）。
  * 内部维护草稿、保存、提交与评判轮询。
@@ -240,6 +263,9 @@ export default function ThinkPage() {
                     <span className="text-xs tracking-[0.25em] uppercase px-3 py-1 rounded-full border border-white/20 text-white/60">
                       {current.category}
                     </span>
+                    {isAdmin && (
+                      <ReviewBadge status={current.reviewStatus} note={current.reviewNote} />
+                    )}
                     <EvalBadge status={current.evalStatus} />
                   </span>
                   {isAdmin && current.aiAvailable && (
@@ -320,6 +346,9 @@ export default function ThinkPage() {
 
                           <div className="flex items-center gap-5">
                             <EvalBadge status={item.evalStatus} />
+                            {isAdmin && (
+                              <ReviewBadge status={item.reviewStatus} note={item.reviewNote} />
+                            )}
                             {item.answerHtml && !answering && (
                               <button
                                 onClick={() =>

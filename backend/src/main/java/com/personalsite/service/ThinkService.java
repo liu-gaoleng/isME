@@ -139,6 +139,8 @@ public class ThinkService {
         }
     }
 
+    private static final int MAX_GENERATE_ATTEMPTS = 3;
+
     private ThinkQuestion generateQuestionForPeriod(int periodIndex) {
         if (!deepSeekClient.isAvailable()) {
             throw new BusinessException("AI 服务未配置，暂时无法出题。请稍后再来。");
@@ -149,12 +151,38 @@ public class ThinkService {
                 .map(q -> q.getQuestionText().substring(0, Math.min(60, q.getQuestionText().length())))
                 .collect(Collectors.toList());
 
-        String questionText = deepSeekClient.generateQuestion(category, recentTitles);
+        // 生成 + 质检双 AI 流程：不合格打回重出（最多 3 次），
+        // 不合格版本加入避开列表防止换汤不换药；仍不合格则保留并标记 FAILED。
+        String questionText = null;
+        String reviewStatus = "SKIPPED";
+        String reviewNote = null;
+        for (int attempt = 1; attempt <= MAX_GENERATE_ATTEMPTS; attempt++) {
+            questionText = deepSeekClient.generateQuestion(category, recentTitles);
+            try {
+                DeepSeekClient.ReviewResult review = deepSeekClient.reviewQuestion(category, questionText);
+                if (review.passed()) {
+                    reviewStatus = "PASSED";
+                    reviewNote = review.note();
+                    break;
+                }
+                reviewStatus = "FAILED";
+                reviewNote = review.note();
+                log.warn("题目质检未通过 period={} attempt={}: {}", periodIndex, attempt, review.note());
+                recentTitles.add(questionText.substring(0, Math.min(60, questionText.length())));
+            } catch (Exception e) {
+                // 质检调用本身失败：不阻塞出题，标记为未审查
+                log.error("题目质检调用失败，直接采用本期题目 period={}", periodIndex, e);
+                reviewStatus = "SKIPPED";
+                break;
+            }
+        }
 
         ThinkQuestion question = new ThinkQuestion();
         question.setPeriodIndex(periodIndex);
         question.setCategory(category);
         question.setQuestionText(questionText);
+        question.setReviewStatus(reviewStatus);
+        question.setReviewNote(reviewNote);
         // 并发/重试下撞 period_index 唯一约束时，按已存在处理
         try {
             return questionRepository.saveAndFlush(question);
@@ -192,6 +220,8 @@ public class ThinkService {
         dto.setPeriodIndex(q.getPeriodIndex());
         dto.setCategory(q.getCategory());
         dto.setQuestionText(q.getQuestionText());
+        dto.setReviewStatus(q.getReviewStatus());
+        dto.setReviewNote(q.getReviewNote());
         dto.setPeriodStart(ANCHOR.plusDays((long) q.getPeriodIndex() * PERIOD_DAYS));
         dto.setPeriodEnd(ANCHOR.plusDays((long) (q.getPeriodIndex() + 1) * PERIOD_DAYS - 1));
         if (a != null) {
@@ -209,6 +239,8 @@ public class ThinkService {
         dto.setPeriodIndex(q.getPeriodIndex());
         dto.setCategory(q.getCategory());
         dto.setQuestionText(q.getQuestionText());
+        dto.setReviewStatus(q.getReviewStatus());
+        dto.setReviewNote(q.getReviewNote());
         dto.setPeriodStart(ANCHOR.plusDays((long) q.getPeriodIndex() * PERIOD_DAYS));
         dto.setPeriodEnd(ANCHOR.plusDays((long) (q.getPeriodIndex() + 1) * PERIOD_DAYS - 1));
         dto.setAiAvailable(deepSeekClient.isAvailable());
