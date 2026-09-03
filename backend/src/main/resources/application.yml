@@ -62,3 +62,9 @@ app:
     username: ${ADMIN_USERNAME:admin}
     email: ${ADMIN_EMAIL:admin@example.com}
     password: ${ADMIN_PASSWORD:admin123}
+  # 「思考一下」模块的 AI 服务（DeepSeek，OpenAI 兼容接口）。
+  # api-key 为空时模块降级：不出题、不评判，接口返回友好提示。
+  deepseek:
+    api-key: ${DEEPSEEK_API_KEY:}
+    base-url: ${DEEPSEEK_BASE_URL:https://api.deepseek.com/chat/completions}
+    model: ${DEEPSEEK_MODEL:deepseek-chat}

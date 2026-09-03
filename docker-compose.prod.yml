@@ -48,6 +48,8 @@ services:
       COOKIE_SECURE: "true"
       # 上传文件存储到容器内 /app/uploads，并通过下方 named volume 持久化
       APP_UPLOAD_DIR: /app/uploads
+      # 「思考一下」模块的 AI 服务密钥（DeepSeek）；未配置时该模块降级不可用
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
     volumes:
       - uploads_data:/app/uploads
     depends_on:

@@ -313,3 +313,124 @@ body {
     animation: none;
   }
 }
+
+/* ===== 「思考一下」富文本（作答渲染 + AI 评判 Markdown + 编辑器内容） ===== */
+.think-rich,
+.think-editor-content {
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.9;
+  font-size: 1rem;
+  overflow-wrap: break-word;
+}
+
+.think-rich p,
+.think-editor-content p {
+  margin: 0.75em 0;
+}
+
+.think-rich h1, .think-rich h2, .think-rich h3, .think-rich h4,
+.think-editor-content h1, .think-editor-content h2,
+.think-editor-content h3, .think-editor-content h4 {
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 1.4em 0 0.6em;
+  line-height: 1.4;
+}
+
+.think-rich h1, .think-editor-content h1 { font-size: 1.5rem; }
+.think-rich h2, .think-editor-content h2 { font-size: 1.3rem; }
+.think-rich h3, .think-editor-content h3 { font-size: 1.15rem; }
+.think-rich h4, .think-editor-content h4 { font-size: 1.05rem; }
+
+.think-rich ul, .think-rich ol,
+.think-editor-content ul, .think-editor-content ol {
+  padding-left: 1.5em;
+  margin: 0.75em 0;
+}
+
+.think-rich ul, .think-editor-content ul { list-style: disc; }
+.think-rich ol, .think-editor-content ol { list-style: decimal; }
+.think-rich li, .think-editor-content li { margin: 0.35em 0; }
+
+.think-rich strong, .think-editor-content strong {
+  color: #fff;
+  font-weight: 600;
+}
+
+.think-rich a, .think-editor-content a {
+  color: rgba(255, 255, 255, 0.95);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: rgba(255, 255, 255, 0.4);
+}
+
+.think-rich a:hover, .think-editor-content a:hover {
+  text-decoration-color: #fff;
+}
+
+.think-rich blockquote, .think-editor-content blockquote {
+  border-left: 2px solid rgba(255, 255, 255, 0.25);
+  padding-left: 1em;
+  margin: 1em 0;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.think-rich code, .think-editor-content code {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  padding: 0.15em 0.4em;
+  font-size: 0.88em;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.think-rich pre, .think-editor-content pre {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 1em 1.2em;
+  margin: 1em 0;
+  overflow-x: auto;
+}
+
+.think-rich pre code, .think-editor-content pre code {
+  background: none;
+  padding: 0;
+  font-size: 0.85rem;
+}
+
+.think-rich img, .think-editor-content img {
+  max-width: 100%;
+  border-radius: 8px;
+  margin: 1em 0;
+}
+
+.think-rich hr, .think-editor-content hr {
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  margin: 1.8em 0;
+}
+
+.think-rich table, .think-editor-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1em 0;
+  font-size: 0.92rem;
+}
+
+.think-rich th, .think-rich td,
+.think-editor-content th, .think-editor-content td {
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 0.5em 0.8em;
+  text-align: left;
+}
+
+.think-rich th, .think-editor-content th {
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+}
+
+/* 编辑器 placeholder 光标区域与只读区分隔 */
+.think-editor-content:focus {
+  outline: none;
+}

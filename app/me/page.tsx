@@ -9,6 +9,7 @@ const MODULES = [
   { href: '/me/boards', label: '画板', glyph: '✎' },
   { href: '/me/joy', label: '小确幸', glyph: '☀' },
   { href: '/me/daily', label: '每日一问', glyph: '?' },
+  { href: '/me/think', label: '思考一下', glyph: '思' },
 ];
 
 export default function MeHubPage() {
