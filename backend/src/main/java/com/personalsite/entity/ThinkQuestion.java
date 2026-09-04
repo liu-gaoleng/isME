@@ -5,7 +5,7 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
- * 「思考一下」题目：每 3 天一期（period_index 唯一），由 DeepSeek 生成。
+ * 「思考一下」题目：每 7 天一期（period_index 唯一），由 DeepSeek 生成。
  * category: 产品分析 / 历史事件判断 / 架构设计，按 period_index % 3 轮换。
  */
 @Data

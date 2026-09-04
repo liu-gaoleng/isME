@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * 「思考一下」：每 3 天一期深度思考题 + AI 评判。
+ * 「思考一下」：每 7 天一期深度思考题 + AI 评判。
  * GET 公开；保存/提交/换题仅管理员（SecurityConfig 兜底规则）。
  * 作答按 questionId 路由——当期可答，往期未答的题也允许补答。
  */

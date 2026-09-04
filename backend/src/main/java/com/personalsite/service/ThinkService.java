@@ -21,8 +21,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * 「思考一下」模块：每 3 天一期深度思考题（DeepSeek 生成），作答后 AI 异步评判。
- * 期号规则：period_index = (today - 2026-09-03) / 3；类别按 period_index % 3 轮换。
+ * 「思考一下」模块：每 7 天一期深度思考题（DeepSeek 生成），作答后 AI 异步评判。
+ * 期号规则：period_index = (today - 2026-09-03) / 7；类别按 period_index % 3 轮换。
  * 作答按 questionId 路由——当期可答，往期未答的题也允许补答。
  */
 @Slf4j
@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 public class ThinkService {
     /** 期号锚点：2026-09-03 为第 0 期第一天 */
     private static final LocalDate ANCHOR = LocalDate.of(2026, 9, 3);
-    private static final int PERIOD_DAYS = 3;
+    private static final int PERIOD_DAYS = 7;
     private static final String[] CATEGORIES = {"产品分析", "历史事件判断", "架构设计"};
 
     private final ThinkQuestionRepository questionRepository;
