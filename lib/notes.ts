@@ -32,6 +32,16 @@ export interface Note {
 export const notes: Note[] = [
   // ============ 碎碎念 ============
   {
+    id: '2026-11-08-let-me-tell-you',
+    type: 'musing',
+    date: '2026.11.08',
+    category: '生活',
+    title: '我跟你讲',
+    body: [
+      '我跟你讲Pizaraa怎样征服的印加帝国，讲一生都在追求自我的Hans和Siddhartha，讲那句绝美的“整个爱尔兰都在下雪”，讲文艺复兴三杰，讲窄门，讲寻求“好解释”，讲活着，讲文城，讲我想去新几内亚岛过原始的、和大自然抗争的自食其力的生活；我跟你讲attention is all you need，讲Claudecode、Codex，讲广告竞价广告计费，讲你在抖音上的每一个事件都会命中几千个AB test，讲我在AI时代什么都抓不住，却依旧在不停的胡乱伸手；我跟你讲我最喜欢的事情是伴着冷风，在北京的街上漫无目的地走。',
+    ],
+  },
+  {
     id: '2026-09-04-study-1',
     type: 'musing',
     date: '2026.09.04',
